@@ -9,6 +9,12 @@ import {
 export function useSimulation() {
   const [state, setState] = useState<any>({
     events: [],
+    signals: {
+      failed_logins: false,
+      suspicious_login: false,
+      lateral_movement: false,
+      drone_activity: false,
+    },
     incident: null,
   });
 

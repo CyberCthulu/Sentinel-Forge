@@ -6,28 +6,36 @@ from app.core.pipeline import run_pipeline
 
 app = FastAPI()
 
+
+def build_initial_state():
+    return {
+        "events": [],
+        "signals": {
+            "failed_logins": False,
+            "suspicious_login": False,
+            "lateral_movement": False,
+            "drone_activity": False,
+        },
+        "incident": None,
+    }
+
+
 # -----------------------
 # GLOBAL STATE
 # -----------------------
-state = {
-    "events": [],
-    "incident": None
-}
-
+state = build_initial_state()
 step_counter = 0
 
 # -----------------------
 # ROUTES
 # -----------------------
 
+
 @app.post("/simulate/start")
 def start_simulation():
     global state, step_counter
 
-    state = {
-        "events": [],
-        "incident": None
-    }
+    state = build_initial_state()
     step_counter = 0
 
     return state
@@ -43,7 +51,8 @@ def step_simulation():
     if event:
         state["events"].append(event)
 
-    incident = run_pipeline(state["events"])
+    signals, incident = run_pipeline(state["events"])
+    state["signals"] = signals
     state["incident"] = incident
 
     return state
@@ -58,10 +67,7 @@ def get_state():
 def reset():
     global state, step_counter
 
-    state = {
-        "events": [],
-        "incident": None
-    }
+    state = build_initial_state()
     step_counter = 0
 
     return state

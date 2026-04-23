@@ -6,7 +6,7 @@ export default function IncidentCard({ incident }: Props) {
   if (!incident) return null;
 
   return (
-    <div style={{ border: "2px solid red", padding: 10, marginTop: 20 }}>
+    <div className="incident">
       <h2>{incident.severity}</h2>
       <p>Confidence: {incident.confidence}</p>
       <p>{incident.summary}</p>
