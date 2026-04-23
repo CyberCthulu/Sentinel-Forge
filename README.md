@@ -1,11 +1,191 @@
+# 🛡️ Sentinel Forge
 
-# 🛡️ SENTINEL FORGE — COMPLETE PROJECT SCAFFOLD
+Sentinel Forge is a **cyber-physical threat interpretation engine** that transforms fragmented signals into a single, actionable decision.
+
+Modern operators are overwhelmed by disconnected alerts across cybersecurity systems and physical sensors. Sentinel Forge addresses this by **fusing multi-domain telemetry**, identifying coordinated threats, and delivering **clear, prioritized actions in real time**.
+
+> This is not another alerting system.  
+> This is a **decision layer**.
 
 ---
 
-# 🧱 1. ROOT STRUCTURE
+## 🎯 The Problem
 
-```bash
+Security environments today suffer from:
+
+- Alert fatigue from fragmented systems  
+- Lack of correlation between cyber and physical signals  
+- Slow decision-making under pressure  
+- High cognitive load on operators  
+
+Most systems show you *everything*.
+
+Very few systems tell you:
+- **What is actually happening**
+- **Why it matters**
+- **What to do next**
+
+---
+
+## ⚔️ The Solution
+
+Sentinel Forge:
+
+- Ingests cyber and physical signals  
+- Detects meaningful patterns  
+- Correlates signals across domains  
+- Produces a **single, high-confidence incident**  
+- Recommends **immediate response actions**  
+
+---
+
+## 🎬 Demo Overview
+
+Sentinel Forge demonstrates how weak signals evolve into a critical, actionable situation.
+
+### Scenario
+
+- Multiple failed login attempts  
+- Successful login from unfamiliar source  
+- Lateral movement across systems  
+- Drone activity near perimeter  
+
+### Output
+
+```
+
+CRITICAL — Coordinated Intrusion Attempt
+Confidence: 91%
+
+````
+
+### Recommended Actions
+
+- Lock affected accounts  
+- Isolate compromised systems  
+- Dispatch patrol to Sector B  
+- Increase surveillance  
+
+---
+
+## 🧠 What Makes Sentinel Forge Different
+
+Most systems generate alerts.
+
+Sentinel Forge:
+
+- Connects signals across **cyber and physical domains**
+- Reduces alert fatigue by consolidating noise
+- Provides **explainable reasoning** for every decision
+- Delivers **clear, actionable guidance**
+
+It answers:
+
+- **What is happening?**  
+- **Why is it happening?**  
+- **What should I do?**
+
+---
+
+## 🔥 Core Principle
+
+Sentinel Forge is built to collapse complexity into a single moment:
+
+→ The system understands the situation  
+→ The operator knows exactly what to do  
+
+---
+
+## 🧠 Architecture Overview
+
+### Core Data Flow
+
+Adapters → Ingestion → Normalization → Detection → Fusion → Interpretation → Incident → API → UI
+
+---
+
+### System Layers
+
+#### 🔌 Adapters (Data Sources)
+
+- Mock (scenario engine)
+- Microsoft Defender (planned)
+- SIEM (Elastic / Splunk planned)
+
+---
+
+#### 📥 Ingestion
+
+Handles incoming data streams:
+
+- Cyber signals (auth logs, network activity)
+- Physical signals (drone, perimeter, access)
+
+---
+
+#### 🔄 Normalization
+
+Standardizes events into a unified format:
+
+```json
+{
+  "type": "...",
+  "source": "...",
+  "timestamp": "...",
+  "metadata": {}
+}
+````
+
+---
+
+#### 🔍 Detection
+
+Extracts signals from events:
+
+* failed_logins
+* suspicious_login
+* lateral_movement
+* drone_activity
+
+---
+
+#### 🧠 Fusion (Core Differentiator)
+
+Combines signals to detect coordinated behavior:
+
+* Cross-domain correlation
+* Confidence scoring
+* Temporal + contextual linking
+
+---
+
+#### 🧾 Interpretation
+
+Outputs operator-ready intelligence:
+
+* Severity
+* Confidence
+* Explanation (“why”)
+* Recommended actions
+
+---
+
+#### 🔗 Pipeline
+
+Orchestrates the system:
+
+1. Fetch event
+2. Normalize
+3. Detect signals
+4. Correlate
+5. Interpret
+6. Output incident
+
+---
+
+## 📁 Project Structure
+
+```
 sentinel-forge/
 │
 ├── server/
@@ -18,349 +198,29 @@ sentinel-forge/
 
 ---
 
-# 🧠 2. BACKEND (CORE SYSTEM)
+## ⚛️ Frontend Overview
 
-```bash
-server/
+```
+client/src/
+├── components/
+│   ├── IncidentCard.tsx
+│   ├── SignalBreakdown.tsx
+│   ├── ActionList.tsx
+│   ├── LogStream.tsx
 │
-├── app/
-│   ├── main.py                # FastAPI entrypoint
+├── pages/
+│   ├── Dashboard.tsx
 │
-│   ├── config/
-│   │   ├── settings.py        # env + config
-│   │
-│   ├── api/
-│   │   ├── routes/
-│   │   │   ├── simulate.py
-│   │   │   ├── state.py
-│   │   │   ├── reset.py
-│   │
-│   ├── adapters/              # 🔌 DATA SOURCES (CRITICAL)
-│   │   ├── base.py
-│   │   ├── mock.py
-│   │   ├── defender.py
-│   │   ├── siem.py
-│   │
-│   ├── generator/             # 🎬 SCENARIO ENGINE
-│   │   ├── scenario_engine.py
-│   │   ├── coordinated_attack.py
-│   │   ├── cyber_events.py
-│   │   ├── physical_events.py
-│   │
-│   ├── ingestion/             # 📥 RAW DATA INGESTION
-│   │   ├── cyber_ingestor.py
-│   │   ├── physical_ingestor.py
-│   │
-│   ├── normalization/         # 🔄 STANDARDIZE EVENTS
-│   │   ├── normalizer.py
-│   │   ├── schemas.py
-│   │
-│   ├── detection/             # 🔍 SIGNAL EXTRACTION
-│   │   ├── engine.py
-│   │   ├── rules/
-│   │   │   ├── failed_logins.py
-│   │   │   ├── suspicious_login.py
-│   │   │   ├── lateral_movement.py
-│   │   │   ├── drone_activity.py
-│   │
-│   ├── fusion/                # 🧠 CORE DIFFERENTIATOR
-│   │   ├── correlator.py
-│   │   ├── scoring.py
-│   │   ├── interpreter.py
-│   │   ├── actions.py
-│   │
-│   ├── pipeline/              # 🔗 ORCHESTRATION
-│   │   ├── process_pipeline.py
-│   │
-│   ├── state/                 # 🧠 IN-MEMORY SYSTEM STATE
-│   │   ├── store.py
-│   │
-│   ├── models/
-│   │   ├── event.py
-│   │   ├── signal.py
-│   │   ├── incident.py
+├── hooks/
+│   ├── useSimulation.ts
 │
-├── requirements.txt
-├── venv/
+├── services/
+│   ├── api.ts
 ```
 
 ---
 
-# 🧠 3. CORE DESIGN PHILOSOPHY
-
-You are building:
-
-> **A decision layer on top of cyber + physical telemetry**
-
-NOT:
-
-* a SIEM
-* a monitoring tool
-* a log viewer
-
----
-
-# 🔥 4. DATA FLOW (LOCK THIS IN)
-
-```text
-Adapters (mock / defender / siem)
-        ↓
-Ingestion
-        ↓
-Normalization
-        ↓
-Detection (signals)
-        ↓
-Fusion (correlation)
-        ↓
-Interpretation
-        ↓
-Incident
-        ↓
-API → Frontend
-```
-
----
-
-# 🧩 5. CORE MODELS
-
----
-
-## `models/event.py`
-
-```python
-class Event:
-    def __init__(self, type, source, timestamp, metadata):
-        self.type = type
-        self.source = source
-        self.timestamp = timestamp
-        self.metadata = metadata
-```
-
----
-
-## `models/signal.py`
-
-```python
-class Signal:
-    def __init__(self, name, active, evidence):
-        self.name = name
-        self.active = active
-        self.evidence = evidence
-```
-
----
-
-## `models/incident.py`
-
-```python
-class Incident:
-    def __init__(self, type, severity, confidence, summary, narrative, signals, actions):
-        self.type = type
-        self.severity = severity
-        self.confidence = confidence
-        self.summary = summary
-        self.narrative = narrative
-        self.signals = signals
-        self.actions = actions
-```
-
----
-
-# 🔌 6. ADAPTER LAYER (CRITICAL)
-
----
-
-## `adapters/base.py`
-
-```python
-class Adapter:
-    def fetch_events(self):
-        raise NotImplementedError
-```
-
----
-
-## `adapters/mock.py`
-
-* uses your scenario engine
-
----
-
-## `adapters/defender.py`
-
-* Microsoft Graph API (later)
-
----
-
-## `adapters/siem.py`
-
-* Splunk / Elastic (later)
-
----
-
-# 🎬 7. SCENARIO ENGINE
-
----
-
-## `generator/coordinated_attack.py`
-
-```python
-def run_scenario(step):
-    sequence = [
-        {"type": "failed_login"},
-        {"type": "failed_login"},
-        {"type": "failed_login"},
-        {"type": "successful_login"},
-        {"type": "node_access", "node": "A"},
-        {"type": "node_access", "node": "B"},
-        {"type": "node_access", "node": "C"},
-        {"type": "drone_activity"}
-    ]
-
-    return sequence[step] if step < len(sequence) else None
-```
-
----
-
-# 🔍 8. DETECTION ENGINE
-
----
-
-## `detection/engine.py`
-
-```python
-def detect(events):
-    return {
-        "failed_logins": detect_failed_logins(events),
-        "suspicious_login": detect_suspicious_login(events),
-        "lateral_movement": detect_lateral(events),
-        "drone_activity": detect_drone(events),
-    }
-```
-
----
-
-# 🧠 9. FUSION (YOUR EDGE)
-
----
-
-## `fusion/correlator.py`
-
-```python
-def correlate(signals):
-    if all(signals.values()):
-        return "COORDINATED_INTRUSION"
-    return None
-```
-
----
-
-## `fusion/scoring.py`
-
-```python
-def score(signals):
-    score = 0.5
-    if signals["failed_logins"]: score += 0.1
-    if signals["suspicious_login"]: score += 0.1
-    if signals["lateral_movement"]: score += 0.1
-    if signals["drone_activity"]: score += 0.1
-    return min(score, 0.99)
-```
-
----
-
-## `fusion/interpreter.py`
-
-```python
-def interpret(type, signals):
-    return {
-        "severity": "CRITICAL",
-        "confidence": score(signals),
-        "summary": "Coordinated intrusion attempt detected",
-        "narrative": "Multiple cyber and physical signals indicate coordinated probing.",
-        "actions": [
-            "Lock accounts",
-            "Isolate node",
-            "Dispatch patrol",
-            "Increase surveillance"
-        ]
-    }
-```
-
----
-
-# 🔗 10. PIPELINE
-
----
-
-## `pipeline/process_pipeline.py`
-
-```python
-def process(adapter):
-    events = adapter.fetch_events()
-
-    normalized = normalize(events)
-    signals = detect(normalized)
-
-    incident_type = correlate(signals)
-
-    if incident_type:
-        return interpret(incident_type, signals)
-
-    return None
-```
-
----
-
-# 🌐 11. API
-
----
-
-## `main.py`
-
-```python
-from fastapi import FastAPI
-from app.pipeline.process_pipeline import process
-from app.adapters.mock import MockAdapter
-
-app = FastAPI()
-
-adapter = MockAdapter()
-
-@app.get("/simulate")
-def simulate():
-    incident = process(adapter)
-    return {"incident": incident}
-```
-
----
-
-# ⚛️ 12. FRONTEND (HIGH LEVEL)
-
-```bash
-client/
-│
-├── src/
-│   ├── components/
-│   │   ├── IncidentCard.tsx
-│   │   ├── SignalBreakdown.tsx
-│   │   ├── ActionList.tsx
-│   │   ├── LogStream.tsx
-│   │
-│   ├── pages/
-│   │   ├── Dashboard.tsx
-│   │
-│   ├── hooks/
-│   │   ├── useSimulation.ts
-│   │
-│   ├── services/
-│   │   ├── api.ts
-```
-
----
-
-# 🧠 13. STATE STRATEGY
+## 🧠 State Model
 
 ```python
 state = {
@@ -370,66 +230,53 @@ state = {
 }
 ```
 
-No DB needed.
+---
+
+## 🔌 Integration Strategy
+
+Sentinel Forge uses a **pluggable adapter architecture**.
+
+### Current
+
+* Mock scenario engine
+
+### Planned
+
+* Microsoft Defender (Graph API)
+* SIEM systems (Elastic / Splunk)
+
+Adapters allow real-world integration without changing core logic.
 
 ---
 
-# 🔥 14. WHAT MAKES THIS “COMPLETE”
+## 🚀 Future Work
 
-You now support:
-
-### Cyber
-
-* authentication logs
-* lateral movement
-
-### Physical
-
-* drone detection
-* perimeter signals
-
-### Fusion
-
-* cross-domain correlation
+* Real-time streaming ingestion (Kafka / event bus)
+* Temporal + spatial correlation
+* Real SIEM + Defender integrations
+* Operator feedback loop
+* Deployment in production environments
 
 ---
 
-# 🏁 FINAL TRUTH
+## 🏁 Why This Matters
 
-This scaffold is:
+Sentinel Forge aligns with real-world defense and security needs:
 
-* architecturally correct ✔
-* extensible ✔
-* demo-ready ✔
-* integration-ready ✔
-
----
-
-# 🔥 Core Principle
-
-Sentinel Forge is built to collapse complexity into a single moment:
-
-→ The system understands the situation  
-→ The operator knows exactly what to do
-
-# 🔥 MOST IMPORTANT LINE
-
-> **Everything exists to produce one moment: the system understands the situation and tells the operator what to do.**
+* Faster decision-making under pressure
+* Reduced cognitive load on operators
+* Improved situational awareness
+* Cross-domain intelligence fusion
 
 ---
 
+## 🔥 Final Thought
 
-# 🎯 Why This Wins
+> In high-stakes environments, more data is not the solution.
+> **Clarity is.**
 
-Sentinel Forge is not another SIEM or monitoring tool.
+Sentinel Forge turns fragmented signals into clear defense.
 
-It solves a critical gap:
-→ Operators are overwhelmed by disconnected signals.
+```
 
-This system:
-- correlates cyber + physical data
-- reduces alert fatigue
-- produces a single, actionable decision
-
-This aligns with real-world defense needs:
-→ clarity under pressure
+---
