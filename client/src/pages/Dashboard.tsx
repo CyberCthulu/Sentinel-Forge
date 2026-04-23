@@ -1,6 +1,7 @@
 import { useSimulation } from "../hooks/useSimulation";
 import LogStream from "../components/LogStream";
 import IncidentCard from "../components/IncidentCard";
+import SignalBreakdown from "../components/SignalBreakdown";
 import { useEffect, useState } from "react";
 import "../App.css";
 
@@ -16,7 +17,7 @@ export default function Dashboard() {
 
   return (
     <div className="app">
-      <div className="header">Sentinel Forge</div>
+      <h1 className="header">Sentinel Forge</h1>
 
       <div className="controls">
         <button className="button" onClick={start}>Start</button>
@@ -28,11 +29,12 @@ export default function Dashboard() {
       </div>
 
       <div className="main">
-        <div className="left-panel">
+        <div className="left-panel panel">
           <LogStream events={state.events} />
         </div>
-        <div className="right-panel">
-          {/* Signal panel goes here next */}
+
+        <div className="right-panel panel">
+          <SignalBreakdown signals={state.signals} />
         </div>
       </div>
 

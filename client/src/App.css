@@ -1,5 +1,3 @@
-/* App.css */
-
 .app {
   padding: 20px;
   min-height: 100vh;
@@ -53,6 +51,19 @@
   height: 300px;
   overflow-y: auto;
   color: var(--accent);
+  text-align: left;
+}
+
+/* Signals */
+.signal-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  text-align: left;
+}
+
+.signal-item {
+  margin-bottom: 6px;
 }
 
 /* Incident */
@@ -62,4 +73,5 @@
   border: 2px solid var(--danger);
   padding: 15px;
   color: var(--danger);
+  text-align: left;
 }
