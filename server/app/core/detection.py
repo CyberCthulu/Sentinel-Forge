@@ -1,3 +1,4 @@
+# app/core/detection.py
 def detect(events):
     signals = {
         "failed_logins": False,

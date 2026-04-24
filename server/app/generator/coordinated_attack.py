@@ -1,3 +1,4 @@
+#app/generator/coordinated_attack.py
 def run_scenario(step):
     sequence = [
         {"type": "failed_login"},

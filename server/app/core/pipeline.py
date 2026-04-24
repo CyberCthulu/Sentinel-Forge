@@ -1,3 +1,4 @@
+# app/core/pipeline.py
 from app.core.detection import detect
 from app.core.correlation import correlate
 from app.core.interpreter import interpret

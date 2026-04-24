@@ -1,3 +1,4 @@
+# app/pipeline/process_pipeline.py
 def process(adapter):
     events = adapter.fetch_events()
 

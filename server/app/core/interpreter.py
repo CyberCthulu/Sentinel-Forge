@@ -1,3 +1,4 @@
+# app/core/interpreter.py
 def interpret(incident_type):
     if incident_type == "COORDINATED_INTRUSION":
         return {

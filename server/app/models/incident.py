@@ -1,3 +1,4 @@
+# app/models/incident.py
 class Incident:
     def __init__(self, type, severity, confidence, summary, narrative, signals, actions):
         self.type = type

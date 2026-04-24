@@ -1,3 +1,4 @@
+# app/core/correlation.py
 def correlate(signals):
     if all([
         signals["failed_logins"],

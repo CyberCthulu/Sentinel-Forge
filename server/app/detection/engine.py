@@ -1,3 +1,4 @@
+# app/detection/engine.py
 def detect(events):
     return {
         "failed_logins": detect_failed_logins(events),

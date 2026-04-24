@@ -1,3 +1,4 @@
+#app/fusion/scoring.py
 def score(signals):
     score = 0.5
     if signals["failed_logins"]: score += 0.1

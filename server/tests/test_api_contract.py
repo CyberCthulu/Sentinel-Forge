@@ -1,3 +1,4 @@
+#server/tests/test_api_contract.py
 import unittest
 
 from fastapi.testclient import TestClient

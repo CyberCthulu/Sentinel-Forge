@@ -1,3 +1,4 @@
+# app/models/event.py   
 class Event:
     def __init__(self, type, source, timestamp, metadata):
         self.type = type
