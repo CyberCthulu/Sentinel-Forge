@@ -8,14 +8,48 @@ from app.core.pipeline import run_pipeline
 app = FastAPI()
 
 
+# -----------------------
+# HELPERS
+# -----------------------
+
+def empty_signal(name):
+    return {
+        "name": name,
+        "active": False,
+        "evidence": []
+    }
+
+
+def serialize_signal(signal):
+    return {
+        "name": signal.name,
+        "active": signal.active,
+        "evidence": signal.evidence,
+    }
+
+def serialize_incident(incident):
+    if not incident:
+        return None
+
+    return {
+        "type": incident.type,
+        "severity": incident.severity,
+        "confidence": incident.confidence,
+        "summary": incident.summary,
+        "signals": incident.signals,
+        "actions": incident.actions,
+        "location": incident.location,
+    }
+
+
 def build_initial_state():
     return {
         "events": [],
         "signals": {
-            "failed_logins": False,
-            "suspicious_login": False,
-            "lateral_movement": False,
-            "drone_activity": False,
+            "failed_logins": empty_signal("failed_logins"),
+            "suspicious_login": empty_signal("suspicious_login"),
+            "lateral_movement": empty_signal("lateral_movement"),
+            "drone_activity": empty_signal("drone_activity"),
         },
         "incident": None,
     }
@@ -24,13 +58,14 @@ def build_initial_state():
 # -----------------------
 # GLOBAL STATE
 # -----------------------
+
 state = build_initial_state()
 step_counter = 0
+
 
 # -----------------------
 # ROUTES
 # -----------------------
-
 
 @app.post("/simulate/start")
 def start_simulation():
@@ -53,7 +88,13 @@ def step_simulation():
         state["events"].append(event)
 
     signals, incident = run_pipeline(state["events"])
-    state["signals"] = signals
+
+    # 🔥 FIX: serialize Signal objects
+    state["signals"] = {
+        k: serialize_signal(v)
+        for k, v in signals.items()
+    }
+
     state["incident"] = incident
 
     return state
@@ -75,8 +116,9 @@ def reset():
 
 
 # -----------------------
-# CORS (frontend access)
+# CORS
 # -----------------------
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
