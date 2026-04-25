@@ -1,12 +1,3 @@
-Good call—locking backend execution first is exactly the right move.
-
-Here is your **clean, production-quality `BACKEND.md`**—structured, actionable, and aligned with how you’re actually building.
-
-Copy-paste this directly:
-
----
-
-````md
 # 🧠 Sentinel Forge — Backend Execution Plan
 
 ## Objective
