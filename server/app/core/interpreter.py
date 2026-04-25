@@ -1,49 +1,35 @@
 # app/core/interpreter.py
-
-from app.models.incident import Incident
-
-
-def interpret(incident_type, signals):
-    if not incident_type:
+def interpret(correlation):
+    if not correlation:
         return None
 
-    why = []
-
-    if signals["failed_logins"].active:
-        why.append("Repeated failed logins")
-
-    if signals["suspicious_login"].active:
-        why.append("Successful login from unfamiliar source")
-
-    if signals["lateral_movement"].active:
-        why.append("Rapid lateral movement")
-
-    if signals["drone_activity"].active:
-        why.append("Drone activity near perimeter")
-
-    location = None
-
-    drone_signal = signals.get("drone_activity")
-    if drone_signal and drone_signal.active:
-        for e in drone_signal.evidence:
-            if "metadata" in e and "lat" in e["metadata"]:
-                location = e["metadata"]
-                break
-
-    if incident_type == "COORDINATED_INTRUSION":
-        return Incident(
-            type=incident_type,
-            severity="CRITICAL",
-            confidence=0.91,
-            summary="Coordinated intrusion attempt detected",
-            signals=list(signals.keys()),
-            actions=[
+    if correlation["type"] == "COORDINATED_INTRUSION":
+        return {
+            "type": "COORDINATED_INTRUSION",
+            "severity": "CRITICAL",
+            "confidence": correlation["confidence"],
+            "summary": "Coordinated intrusion attempt detected",
+            "signals": correlation["contributing_signals"],
+            "recommended_actions": [
                 "Lock affected accounts",
                 "Isolate compromised node",
-                "Dispatch patrol to Sector B",
+                "Dispatch patrol",
                 "Increase surveillance"
             ],
-            location=location
-        )
+        }
+
+    if correlation["type"] == "SUSPICIOUS_ACTIVITY":
+        return {
+            "type": "SUSPICIOUS_ACTIVITY",
+            "severity": "HIGH",
+            "confidence": correlation["confidence"],
+            "summary": "Suspicious multi-domain activity detected",
+            "signals": correlation["contributing_signals"],
+            "recommended_actions": [
+                "Monitor system activity",
+                "Review authentication logs",
+                "Increase alert level"
+            ],
+        }
 
     return None

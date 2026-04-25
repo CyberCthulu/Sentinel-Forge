@@ -1,4 +1,3 @@
-# app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -9,55 +8,18 @@ app = FastAPI()
 
 
 # -----------------------
-# HELPERS
+# STATE
 # -----------------------
-
-def empty_signal(name):
-    return {
-        "name": name,
-        "active": False,
-        "evidence": []
-    }
-
-
-def serialize_signal(signal):
-    return {
-        "name": signal.name,
-        "active": signal.active,
-        "evidence": signal.evidence,
-    }
-
-def serialize_incident(incident):
-    if not incident:
-        return None
-
-    return {
-        "type": incident.type,
-        "severity": incident.severity,
-        "confidence": incident.confidence,
-        "summary": incident.summary,
-        "signals": incident.signals,
-        "actions": incident.actions,
-        "location": incident.location,
-    }
-
 
 def build_initial_state():
     return {
         "events": [],
-        "signals": {
-            "failed_logins": empty_signal("failed_logins"),
-            "suspicious_login": empty_signal("suspicious_login"),
-            "lateral_movement": empty_signal("lateral_movement"),
-            "drone_activity": empty_signal("drone_activity"),
-        },
+        "signals": [],
         "incident": None,
+        "map_state": {"tracks": []},
+
     }
 
-
-# -----------------------
-# GLOBAL STATE
-# -----------------------
 
 state = build_initial_state()
 step_counter = 0
@@ -87,15 +49,12 @@ def step_simulation():
     if event:
         state["events"].append(event)
 
-    signals, incident = run_pipeline(state["events"])
+    result = run_pipeline(state["events"])
 
-    # 🔥 FIX: serialize Signal objects
-    state["signals"] = {
-        k: serialize_signal(v)
-        for k, v in signals.items()
-    }
+    state["signals"] = result["signals"]
+    state["incident"] = result["incident"]
+    state["map_state"] = result["map_state"]
 
-    state["incident"] = incident
 
     return state
 
