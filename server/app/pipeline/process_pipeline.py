@@ -1,4 +1,6 @@
 # app/pipeline/process_pipeline.py
+
+# LEGACY PIPELINE - NOT USED IN CURRENT SYSTEM
 def process(adapter):
     events = adapter.fetch_events()
 

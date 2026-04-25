@@ -7,3 +7,4 @@ class Signal:
         self.weight = weight
         self.evidence = evidence  # list of event IDs
         self.label = label
+        self.location = location or {"lat": None, "lon": None}

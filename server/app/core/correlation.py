@@ -1,4 +1,5 @@
-#app/core/correlation.py
+# app/core/correlation.py
+
 def correlate(signals):
     """
     signals: list[Signal]
@@ -7,40 +8,24 @@ def correlate(signals):
     if not signals:
         return None
 
-    # Total confidence score from signal weights
+    # -----------------------
+    # Confidence scoring
+    # -----------------------
     total_weight = sum(s.weight for s in signals)
-    total_weight = min(round(total_weight, 2), 1.0)
-
-
-    # Extract signal kinds for output
-    contributing = [s.kind for s in signals]
+    score = min(round(total_weight, 2), 0.99)
 
     # -----------------------
-    # Detection logic
+    # Counts (used by frontend)
     # -----------------------
+    cyber_count = len([s for s in signals if s.domain == "cyber"])
+    physical_count = len([s for s in signals if s.domain == "physical"])
 
-    kinds = set(contributing)
-
-    is_intrusion = all([
-        "auth.failed_burst" in kinds,
-        "auth.anomalous_login" in kinds,
-        "network.lateral_movement" in kinds,
-        "physical.drone_recon" in kinds,
-    ])
-
-    if is_intrusion:
-        return {
-            "type": "COORDINATED_INTRUSION",
-            "confidence": round(total_weight, 2),
-            "contributing_signals": contributing,
-        }
-
-    # Optional: partial correlation (nice upgrade)
-    if total_weight >= 0.4:
-        return {
-            "type": "SUSPICIOUS_ACTIVITY",
-            "confidence": round(total_weight, 2),
-            "contributing_signals": contributing,
-        }
-
-    return None
+    # -----------------------
+    # Return FRONTEND-ALIGNED SHAPE
+    # -----------------------
+    return {
+        "score": score,
+        "cyberCount": cyber_count,
+        "physicalCount": physical_count,
+        "signals": signals,  # raw Signal objects (pipeline will serialize)
+    }

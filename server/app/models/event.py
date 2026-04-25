@@ -6,4 +6,5 @@ class Event:
         self.domain = domain
         self.source = source
         self.timestamp = timestamp
-        self.metadata = metadata  
+        self.metadata = metadata 
+        self.location = location or {"lat": None, "lon": None}
