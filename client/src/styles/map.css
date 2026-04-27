@@ -1,1 +1,203 @@
 /* styles/map.css */
+
+.map-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.map-canvas {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  background:
+    linear-gradient(rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.06) 1px, transparent 1px),
+    radial-gradient(circle at 62% 45%, rgba(255, 64, 64, 0.15), transparent 16%),
+    #06101a;
+  background-size: 48px 48px, 48px 48px, auto, auto;
+  overflow: hidden;
+}
+
+/* Faux tactical map texture/lines */
+.map-canvas::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 55% 55%, rgba(56, 189, 248, 0.08), transparent 20%),
+    linear-gradient(115deg, transparent 0 42%, rgba(34, 211, 238, 0.15) 43%, transparent 45%),
+    linear-gradient(75deg, transparent 0 55%, rgba(251, 146, 60, 0.14) 56%, transparent 58%);
+  pointer-events: none;
+}
+
+.map-legend {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 138px;
+  display: grid;
+  gap: 7px;
+  background: rgba(4, 10, 18, 0.72);
+  border: 1px solid rgba(84, 139, 184, 0.25);
+  border-radius: 5px;
+  padding: 9px;
+  font-size: 9px;
+  z-index: 2;
+}
+
+.map-legend span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.map-legend b {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  display: inline-block;
+}
+
+.blue {
+  background: var(--blue);
+}
+
+.red {
+  background: var(--red);
+}
+
+.gray {
+  background: var(--muted);
+}
+
+.orange-line {
+  background: var(--orange);
+  height: 3px !important;
+  border-radius: 0 !important;
+}
+
+.cyan-line {
+  background: var(--cyan);
+  height: 3px !important;
+  border-radius: 0 !important;
+}
+
+/* Map objects */
+.map-node,
+.vessel,
+.sector-ring,
+.map-threat {
+  position: absolute;
+  z-index: 3;
+  font-size: 10.5px;
+  border-radius: 5px;
+  padding: 7px 9px;
+  white-space: nowrap;
+}
+
+.gateway {
+  left: 22%;
+  bottom: 13%;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #bdeeff;
+}
+
+.hq {
+  left: 38%;
+  bottom: 22%;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  color: #bdeeff;
+}
+
+.sector-ring {
+  right: 23%;
+  top: 19%;
+  width: 112px;
+  height: 112px;
+  border: 1px solid rgba(255, 64, 64, 0.85);
+  background:
+    radial-gradient(circle at center, rgba(255, 64, 64, 0.22), rgba(255, 64, 64, 0.08));
+  display: grid;
+  place-items: center;
+  color: #ffb4b4;
+  text-align: center;
+}
+
+.map-threat {
+  right: 31%;
+  top: 42%;
+  color: var(--red);
+  text-shadow: 0 0 12px rgba(255, 64, 64, 0.45);
+}
+
+.vessel {
+  right: 7%;
+  bottom: 18%;
+  background: rgba(34, 211, 238, 0.12);
+  border: 1px solid rgba(34, 211, 238, 0.35);
+  color: var(--cyan);
+}
+
+/* Responsive map adjustments for tighter panel heights */
+@media (max-height: 820px) {
+  .map-legend {
+    width: 128px;
+    gap: 5px;
+    padding: 7px;
+    font-size: 8.5px;
+  }
+
+  .map-node,
+  .vessel,
+  .sector-ring,
+  .map-threat {
+    font-size: 10px;
+    padding: 6px 8px;
+  }
+
+  .sector-ring {
+    width: 100px;
+    height: 100px;
+  }
+}
+
+/* Asset Status panel */
+.asset-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.asset-list {
+  flex: 1;
+  min-height: 0;
+  padding: 8px 10px;
+  display: grid;
+  align-content: start;
+  gap: 6px;
+  overflow-y: auto;
+}
+
+.asset-list div {
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(84, 139, 184, 0.12);
+  padding-bottom: 6px;
+  font-size: 10.5px;
+}
+
+.asset-list span {
+  color: #dbeafe;
+}
+
+.asset-list strong {
+  color: var(--green);
+}
+
+.asset-list strong.active {
+  color: var(--orange);
+}

@@ -1,23 +1,67 @@
 /* styles/correlation.css */
-.correlation {
+.correlation-panel {
   display: flex;
   flex-direction: column;
+}
+
+.correlation-content {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 0.78fr 1fr;
   align-items: center;
+  gap: 14px;
+  padding: 6px 16px 4px;
 }
 
 .score-ring {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 6px solid var(--red);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 28px;
-  font-weight: bold;
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  border: 10px solid rgba(255, 64, 64, 0.88);
+  display: grid;
+  place-items: center;
+  color: var(--red);
+  box-shadow: 0 0 28px rgba(255, 64, 64, 0.18);
 }
 
-.score-label {
-  margin-top: 8px;
+.score-value {
+  font-size: 27px;
+  font-weight: 900;
+}
+
+.score-level {
+  font-size: 9px;
+  color: #ff9b9b;
+  margin-top: -24px;
+}
+
+.trend-box {
   color: var(--muted);
+  font-size: 11px;
+}
+
+.trend-chart {
+  height: 74px;
+  margin-top: 6px;
+  border-left: 1px solid rgba(148, 163, 184, 0.3);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
+  color: var(--red);
+  background: linear-gradient(180deg, rgba(255, 64, 64, 0.08), transparent);
+}
+
+.trend-chart svg {
+  width: 100%;
+  height: 100%;
+}
+
+.threshold-line {
+  flex: 0 0 24px;
+  height: 24px;
+  border-top: 1px solid rgba(251, 191, 36, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  color: var(--muted);
+  font-size: 9px;
 }
