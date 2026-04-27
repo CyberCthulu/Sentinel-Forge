@@ -1,32 +1,17 @@
-type Signals = Record<string, boolean>;
+import "../styles/signals.css";
 
-type SignalBreakdownProps = {
-  signals: Signals;
-};
-
-const formatSignalName = (name: string) =>
-  name
-    .split("_")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-
-export default function SignalBreakdown({ signals }: SignalBreakdownProps) {
-  const entries = Object.entries(signals || {});
-
+export default function SignalBreakdown({ signals }: any) {
   return (
-    <div>
-      <h3>Signals</h3>
-      {entries.length === 0 ? (
-        <div>No signals yet.</div>
-      ) : (
-        <ul className="signal-list">
-          {entries.map(([name, active]) => (
-            <li key={name} className="signal-item">
-              {active ? "✅" : "⬜"} {formatSignalName(name)}
-            </li>
-          ))}
-        </ul>
-      )}
+    <div className="panel signals">
+      <h3>SIGNAL BREAKDOWN</h3>
+
+      {signals?.map((s: any) => (
+        <div key={s.id} className="signal">
+          <span>{s.label}</span>
+          <span className="active">ACTIVE</span>
+          <span>{s.evidence.length}</span>
+        </div>
+      ))}
     </div>
   );
 }

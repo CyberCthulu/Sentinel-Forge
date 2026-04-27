@@ -1,13 +1,19 @@
-type Props = { events: any[] };
+import "../styles/logstream.css";
 
-export default function LogStream({ events }: Props) {
+export default function LogStream({ events }: any) {
   return (
-    <div className="panel log-stream">
-      {events.map((e, i) => (
-        <div key={i}>
-          [{new Date().toLocaleTimeString()}] {e.type} ({e.source || "mock"})
-        </div>
-      ))}
+    <div className="panel logstream">
+      <h3>EVENT STREAM</h3>
+
+      <div className="log-list">
+        {events?.map((e: any) => (
+          <div key={e.id} className={`log-item ${e.domain}`}>
+            <span>{e.timestamp}</span>
+            <span>{e.source}</span>
+            <span>{e.message}</span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

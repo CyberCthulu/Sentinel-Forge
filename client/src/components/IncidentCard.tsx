@@ -1,25 +1,18 @@
-import ActionList from "./ActionList";
+import "../styles/incident.css";
 
-type Props = { incident: any };
-
-export default function IncidentCard({ incident }: Props) {
-  if (!incident) return null;
+export default function IncidentCard({ incident }: any) {
+  if (!incident) return <div className="panel">No Incident</div>;
 
   return (
-    <div className="incident">
-      <h2>🚨 {incident.severity}</h2>
-      <p>Confidence: {incident.confidence}</p>
+    <div className="panel incident critical">
+      <h2>{incident.type}</h2>
       <p>{incident.summary}</p>
 
-      <h4>Why this triggered:</h4>
-      <ul>
-        {incident.why?.map((w: string, i: number) => (
-          <li key={i}>{w}</li>
+      <div className="actions">
+        {incident.recommended_actions.map((a: string, i: number) => (
+          <div key={i}>{a}</div>
         ))}
-      </ul>
-
-      <h4>Recommended Actions:</h4>
-      <ActionList actions={incident.actions || []} />
+      </div>
     </div>
   );
 }

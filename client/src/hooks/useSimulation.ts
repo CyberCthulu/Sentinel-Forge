@@ -1,27 +1,43 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   startSimulation,
   stepSimulation,
-  getState,
   resetSimulation,
+  getState,
 } from "../services/api";
 
 export function useSimulation() {
-  const [state, setState] = useState<any>({
+  const [state, setState] = useState({
     events: [],
-    signals: {
-      failed_logins: false,
-      suspicious_login: false,
-      lateral_movement: false,
-      drone_activity: false,
-    },
+    signals: [],
+    correlation: null,
     incident: null,
+    map_state: null,
   });
 
-  const start = async () => setState(await startSimulation());
-  const step = async () => setState(await stepSimulation());
-  const refresh = async () => setState(await getState());
-  const reset = async () => setState(await resetSimulation());
+  const refresh = async () => {
+    const data = await getState();
+    setState(data);
+  };
 
-  return { state, start, step, refresh, reset };
+  const start = async () => {
+    await startSimulation();
+    await refresh();
+  };
+
+  const step = async () => {
+    await stepSimulation();
+    await refresh();
+  };
+
+  const reset = async () => {
+    await resetSimulation();
+    await refresh();
+  };
+
+  useEffect(() => {
+    refresh();
+  }, []);
+
+  return { state, start, step, reset };
 }

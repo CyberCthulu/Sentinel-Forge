@@ -1,0 +1,27 @@
+.dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: #0b0f14;
+  color: white;
+}
+
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr;
+  gap: 10px;
+  flex: 1;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  height: 300px;
+  gap: 10px;
+}
+
+.panel {
+  background: #111822;
+  padding: 10px;
+  border: 1px solid #1e2a38;
+}
