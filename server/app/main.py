@@ -15,6 +15,7 @@ def build_initial_state():
     return {
         "events": [],
         "signals": [],
+        "correlation": {"confidence": 0},  # ✅ ADD THIS
         "incident": None,
         "map_state": {"tracks": []},
 
@@ -54,6 +55,7 @@ def step_simulation():
     state["signals"] = result["signals"]
     state["incident"] = result["incident"]
     state["map_state"] = result["map_state"]
+    state["correlation"] = result["correlation"]
 
 
     return state

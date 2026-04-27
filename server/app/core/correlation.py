@@ -6,26 +6,31 @@ def correlate(signals):
     """
 
     if not signals:
-        return None
+        return {
+            "confidence": 0,
+            "cyberCount": 0,
+            "physicalCount": 0,
+            "signals": [],
+        }
 
     # -----------------------
     # Confidence scoring
     # -----------------------
     total_weight = sum(s.weight for s in signals)
-    score = min(round(total_weight, 2), 0.99)
+    confidence = min(round(total_weight, 2), 0.99)
 
     # -----------------------
-    # Counts (used by frontend)
+    # Counts
     # -----------------------
-    cyber_count = len([s for s in signals if s.domain == "cyber"])
-    physical_count = len([s for s in signals if s.domain == "physical"])
+    cyber_count = sum(1 for s in signals if s.domain == "cyber")
+    physical_count = sum(1 for s in signals if s.domain == "physical")
 
     # -----------------------
-    # Return FRONTEND-ALIGNED SHAPE
+    # Return simple, consistent shape
     # -----------------------
     return {
-        "score": score,
+        "confidence": confidence,
         "cyberCount": cyber_count,
         "physicalCount": physical_count,
-        "signals": signals,  # raw Signal objects (pipeline will serialize)
+        "signals": signals,
     }

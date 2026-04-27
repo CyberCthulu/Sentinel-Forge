@@ -20,10 +20,12 @@ def run_pipeline(events):
     # -----------------------
     # Interpret
     # -----------------------
-    incident = interpret(correlation)
+    incident = None
 
+    if correlation and correlation["confidence"] >= 0.35:
+        incident = interpret(correlation)
     # -----------------------
-    # Map state (leave as-is)
+    # Map state
     # -----------------------
     map_state = build_map_state(events)
 
@@ -32,17 +34,18 @@ def run_pipeline(events):
     # -----------------------
     serialized_signals = [serialize_signal(s) for s in signals]
 
-    serialized_correlation = None
-    if correlation:
-        serialized_correlation = {
-            "score": correlation["score"],
-            "cyberCount": correlation["cyberCount"],
-            "physicalCount": correlation["physicalCount"],
-            "signals": [serialize_signal(s) for s in correlation["signals"]],
-        }
+    # -----------------------
+    # Serialize correlation (SAFE + SIMPLE)
+    # -----------------------
+    serialized_correlation = {
+        "confidence": correlation["confidence"],
+        "cyberCount": correlation["cyberCount"],
+        "physicalCount": correlation["physicalCount"],
+        "signals": [serialize_signal(s) for s in correlation["signals"]],
+    }
 
     # -----------------------
-    # Final response (UI-ready)
+    # Final response
     # -----------------------
     return {
         "signals": serialized_signals,
