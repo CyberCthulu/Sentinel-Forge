@@ -1,0 +1,23 @@
+/* styles/theme.css */
+:root {
+  --bg: #0a0f1c;
+  --panel: #0f172a;
+  --border: #1f2a44;
+
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+
+  --green: #22c55e;
+  --yellow: #f59e0b;
+  --orange: #f97316;
+  --red: #ef4444;
+
+  --blue: #38bdf8;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+}

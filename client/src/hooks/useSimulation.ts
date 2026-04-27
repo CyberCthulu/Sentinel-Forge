@@ -1,3 +1,4 @@
+//hooks/useSimulation.ts
 import { useEffect, useState } from "react";
 import {
   startSimulation,

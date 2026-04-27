@@ -1,0 +1,15 @@
+/* styles/signals.css */
+.signal {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.signal.active {
+  color: var(--green);
+}
+
+.signal.inactive {
+  color: var(--muted);
+}

@@ -1,4 +1,5 @@
-import "../styles/map.css";
+//components/MapView.tsx
+
 
 export default function MapView({ map }: any) {
   return (

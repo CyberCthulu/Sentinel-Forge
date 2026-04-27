@@ -1,0 +1,27 @@
+/* styles/logstream.css */
+.log-list {
+  overflow-y: auto;
+  max-height: 100%;
+}
+
+.event {
+  display: flex;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+}
+
+.event .source {
+  color: var(--blue);
+  font-weight: bold;
+  width: 60px;
+}
+
+.event.cyber {
+  color: #60a5fa;
+}
+
+.event.physical {
+  color: #f97316;
+}

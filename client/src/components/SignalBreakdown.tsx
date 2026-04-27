@@ -1,4 +1,4 @@
-import "../styles/signals.css";
+//components/SignalBreakdown.tsx
 
 export default function SignalBreakdown({ signals }: any) {
   return (

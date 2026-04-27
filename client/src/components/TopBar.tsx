@@ -1,4 +1,4 @@
-import "../styles/topbar.css";
+//components/TopBar.tsx
 
 export default function TopBar({ onStart, onStep, onReset }: any) {
   return (

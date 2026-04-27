@@ -1,4 +1,4 @@
-import "../styles/incident.css";
+//components/IncidentCard.tsx
 
 export default function IncidentCard({ incident }: any) {
   if (!incident) return <div className="panel">No Incident</div>;

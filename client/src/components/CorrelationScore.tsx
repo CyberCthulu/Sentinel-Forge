@@ -1,3 +1,5 @@
+//components/CorrelationScore.tsx
+
 export default function CorrelationScore({ correlation }: any) {
   const confidence = correlation?.confidence || 0;
   const percentage = Math.round(confidence * 100);

@@ -1,4 +1,4 @@
-import "../styles/logstream.css";
+//components/LogStream.tsx
 
 export default function LogStream({ events }: any) {
   return (
@@ -7,10 +7,10 @@ export default function LogStream({ events }: any) {
 
       <div className="log-list">
         {events?.map((e: any) => (
-          <div key={e.id} className={`log-item ${e.domain}`}>
-            <span>{e.timestamp}</span>
-            <span>{e.source}</span>
-            <span>{e.message}</span>
+          <div key={e.id} className={`event ${e.domain}`}>
+            <span className="time">{e.timestamp}</span>
+            <span className="source">{e.source}</span>
+            <span className="message">{e.message}</span>
           </div>
         ))}
       </div>

@@ -1,3 +1,5 @@
+//components/AssetStatus.tsx
+
 export default function AssetStatus() {
   return (
     <div className="panel assets">

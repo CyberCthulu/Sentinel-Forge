@@ -1,3 +1,4 @@
+//components/ActionList.tsx
 type Props = { actions: string[] };
 
 export default function ActionList({ actions }: Props) {
