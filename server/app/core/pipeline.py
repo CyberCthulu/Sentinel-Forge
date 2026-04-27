@@ -1,5 +1,3 @@
-# app/core/pipeline.py
-
 from app.core.detection import detect, serialize_signal
 from app.core.correlation import correlate
 from app.core.interpreter import interpret
@@ -18,12 +16,10 @@ def run_pipeline(events):
     correlation = correlate(signals)
 
     # -----------------------
-    # Interpret
+    # Interpret (ALWAYS if signals exist)
     # -----------------------
-    incident = None
+    incident = interpret(correlation) if signals else None
 
-    if correlation and correlation["confidence"] >= 0.35:
-        incident = interpret(correlation)
     # -----------------------
     # Map state
     # -----------------------
@@ -35,13 +31,18 @@ def run_pipeline(events):
     serialized_signals = [serialize_signal(s) for s in signals]
 
     # -----------------------
-    # Serialize correlation (SAFE + SIMPLE)
+    # Serialize correlation (safe)
     # -----------------------
     serialized_correlation = {
         "confidence": correlation["confidence"],
         "cyberCount": correlation["cyberCount"],
         "physicalCount": correlation["physicalCount"],
         "signals": [serialize_signal(s) for s in correlation["signals"]],
+    } if correlation else {
+        "confidence": 0,
+        "cyberCount": 0,
+        "physicalCount": 0,
+        "signals": []
     }
 
     # -----------------------
