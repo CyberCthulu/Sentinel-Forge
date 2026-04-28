@@ -73,6 +73,9 @@ class SimulationApiContractTest(unittest.TestCase):
         self.assertIn("auth.anomalous_login", signal_kinds)
         self.assertIn("network.lateral_movement", signal_kinds)
         self.assertIn("physical.drone_recon", signal_kinds)
+        self.assertIn("identity.privilege_escalation", signal_kinds)
+        self.assertIn("network.data_exfiltration", signal_kinds)
+        self.assertIn("osint.ais_anomaly", signal_kinds)
 
         self.assertIsNotNone(payload["incident"])
         self.assertEqual(payload["incident"]["severity"], "critical")
