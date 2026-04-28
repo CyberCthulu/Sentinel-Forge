@@ -59,7 +59,7 @@ def score_signals(signals) -> dict[str, Any]:
         + escalation_bonus
     )
 
-    confidence = min(round(raw_score, 2), 0.99)
+    confidence = min(round(raw_score, 2), 1.0)
     level = confidence_to_level(confidence)
 
     return {
