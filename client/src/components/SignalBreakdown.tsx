@@ -1,5 +1,4 @@
 //components/SignalBreakdown.tsx
-import "../styles/signals.css";
 
 const SIGNAL_LABELS: Record<string, string> = {
   "auth.failed_burst": "FAILED_AUTH_BURST",

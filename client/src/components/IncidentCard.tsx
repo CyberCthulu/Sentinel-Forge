@@ -6,7 +6,7 @@ export default function IncidentCard({ incident }: any) {
 
   if (!incident) {
     return (
-      <div className="panel incident-panel incident-summary empty">
+      <div className="panel incident-panel empty">
         <div className="panel-header">
           <h2>INCIDENT ASSESSMENT</h2>
         </div>
@@ -20,32 +20,27 @@ export default function IncidentCard({ incident }: any) {
   }
 
   const confidence = Math.round((incident.confidence || 0) * 100);
-  const factorCount = incident.why?.length || 0;
-  const actionCount = incident.recommended_actions?.length || 0;
 
   return (
     <>
       <button
-        className={`panel incident-panel incident-summary ${incident.severity}`}
+        type="button"
+        className={`panel incident-panel incident-clickable ${incident.severity}`}
         onClick={() => setOpen(true)}
       >
         <div className="panel-header">
           <h2>INCIDENT ASSESSMENT</h2>
-          <span>VIEW DETAILS ›</span>
+          <span className="incident-status">STATUS: ACTIVE</span>
         </div>
 
-        <div className="incident-summary-body">
+        <div className="incident-hero">
           <div className="alert-icon">⚠</div>
 
-          <div className="incident-summary-main">
+          <div className="incident-main">
             <h3>
               {incident.severity.toUpperCase()} — {incident.type.toUpperCase()}
             </h3>
             <p>{incident.summary}</p>
-            <div className="incident-summary-meta">
-              <span>{factorCount} key factors</span>
-              <span>{actionCount} recommended actions</span>
-            </div>
           </div>
 
           <div className="incident-confidence">
@@ -53,20 +48,59 @@ export default function IncidentCard({ incident }: any) {
             <strong>{confidence}%</strong>
           </div>
         </div>
+
+        <div className="incident-details">
+          <section>
+            <h4>KEY FACTORS</h4>
+            <ul>
+              {incident.why?.map((w: string, i: number) => (
+                <li key={i}>{w}</li>
+              ))}
+            </ul>
+          </section>
+
+          <section>
+            <h4>RECOMMENDED ACTIONS</h4>
+            <ul>
+              {incident.recommended_actions?.map((a: string, i: number) => (
+                <li key={i}>{a}</li>
+              ))}
+            </ul>
+          </section>
+        </div>
       </button>
 
       {open && (
-        <div className="incident-modal-backdrop" onClick={() => setOpen(false)}>
-          <div className={`incident-modal ${incident.severity}`} onClick={(e) => e.stopPropagation()}>
+        <div
+          className="incident-modal-backdrop"
+          onClick={() => setOpen(false)}
+        >
+          <div
+            className={`incident-modal ${incident.severity}`}
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="incident-modal-header">
               <div>
                 <span>INCIDENT ID: {incident.id}</span>
-                <h2>{incident.severity.toUpperCase()} — {incident.type.toUpperCase()}</h2>
+                <h2>
+                  {incident.severity.toUpperCase()} —{" "}
+                  {incident.type.toUpperCase()}
+                </h2>
               </div>
-              <button onClick={() => setOpen(false)}>×</button>
+
+              <button type="button" onClick={() => setOpen(false)}>
+                ×
+              </button>
             </div>
 
-            <p className="incident-modal-summary">{incident.summary}</p>
+            <div className="incident-modal-summary">
+              <p>{incident.summary}</p>
+
+              <div className="incident-modal-confidence">
+                <span>CONFIDENCE</span>
+                <strong>{confidence}%</strong>
+              </div>
+            </div>
 
             <div className="incident-modal-grid">
               <section>
@@ -88,7 +122,7 @@ export default function IncidentCard({ incident }: any) {
               </section>
 
               <section>
-                <h4>SIGNALS</h4>
+                <h4>CONTRIBUTING SIGNALS</h4>
                 <ul>
                   {incident.signals?.map((s: string, i: number) => (
                     <li key={i}>{s}</li>
@@ -97,8 +131,12 @@ export default function IncidentCard({ incident }: any) {
               </section>
 
               <section>
-                <h4>CONFIDENCE</h4>
-                <div className="modal-confidence">{confidence}%</div>
+                <h4>OPERATOR SUMMARY</h4>
+                <p>
+                  Sentinel Forge correlated the available signals into a staged
+                  threat assessment. The current classification reflects signal
+                  confidence, domain coverage, and escalation pattern.
+                </p>
               </section>
             </div>
           </div>

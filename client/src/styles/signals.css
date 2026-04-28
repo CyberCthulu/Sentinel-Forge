@@ -33,9 +33,14 @@
 }
 
 .signal-row {
-  min-height: 35px;
+  min-height: 39px;
   border-bottom: 1px solid rgba(84, 139, 184, 0.08);
   font-size: 11px;
+}
+
+.signal-row.inactive {
+  min-height: 34px;
+  opacity: 0.42;
 }
 
 .signal-icon {
@@ -90,10 +95,6 @@
   height: 100%;
   background: var(--red);
   border-radius: inherit;
-}
-
-.signal-row.inactive {
-  opacity: 0.42;
 }
 
 .signal-row.inactive .signal-main strong {
