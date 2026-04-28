@@ -24,19 +24,24 @@ def detect_lateral_movement(events):
     if not explicit_lateral and len(unique_nodes) < 3:
         return None
 
-    evidence = [e["id"] for e in explicit_lateral] or [e["id"] for e in node_access]
+    # IMPORTANT:
+    # Keep both derived evidence and explicit alert evidence.
+    # Do not replace node_access evidence with the later network.lateral event.
+    combined_evidence_events = [*node_access, *explicit_lateral]
 
     return Signal(
         id="sig-lateral",
         kind="network.lateral_movement",
         domain="cyber",
         weight=0.26,
-        evidence=evidence,
+        evidence=[e["id"] for e in combined_evidence_events],
         label="Rapid Lateral Movement",
         description="Rapid access across internal nodes suggests active intrusion behavior.",
         source="rule.lateral_movement",
         metadata={
             "nodes": sorted(unique_nodes),
             "node_count": len(unique_nodes),
+            "explicit_alert_count": len(explicit_lateral),
+            "derived_event_count": len(node_access),
         },
     )

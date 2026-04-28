@@ -1,23 +1,21 @@
 // components/CorrelationScore.tsx
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import "../styles/correlation.css";
+
+type CorrelationHistoryPoint = {
+  timestamp: string;
+  confidence: number;
+  level?: string;
+};
 
 type Correlation = {
   confidence?: number;
-};
-
-type EventLike = {
-  timestamp?: string;
+  level?: string;
+  history?: CorrelationHistoryPoint[];
 };
 
 type Props = {
   correlation: Correlation | null;
-  events?: EventLike[];
-};
-
-type TrendPoint = {
-  confidence: number;
-  label: string;
 };
 
 type SvgPoint = {
@@ -25,37 +23,13 @@ type SvgPoint = {
   y: number;
 };
 
-const MAX_POINTS = 8;
-
-export default function CorrelationScore({ correlation, events = [] }: Props) {
+export default function CorrelationScore({ correlation }: Props) {
   const confidence = correlation?.confidence ?? 0;
   const percentage = Math.round(confidence * 100);
 
-  const latestTimestamp = getLatestEventTime(events);
+  const level = getLevelFromCorrelation(correlation, percentage);
 
-  const [history, setHistory] = useState<TrendPoint[]>([
-    { confidence: 0, label: "--:--" },
-  ]);
-
-  useEffect(() => {
-    setHistory((prev) => {
-      if (events.length === 0 && confidence === 0) {
-        return [{ confidence: 0, label: "--:--" }];
-      }
-
-      const last = prev[prev.length - 1];
-
-      if (last.confidence === confidence && last.label === latestTimestamp) {
-        return prev;
-      }
-
-      const next = [...prev, { confidence, label: latestTimestamp }];
-      return next.slice(-MAX_POINTS);
-    });
-  }, [confidence, latestTimestamp, events.length]);
-
-  const level = getLevel(percentage);
-
+  const history = useMemo(() => buildHistory(correlation), [correlation]);
   const displaySeries = useMemo(() => buildDisplaySeries(history), [history]);
   const linePoints = useMemo(() => buildSvgLinePoints(displaySeries), [displaySeries]);
   const areaPoints = useMemo(() => buildSvgAreaPoints(displaySeries), [displaySeries]);
@@ -76,8 +50,6 @@ export default function CorrelationScore({ correlation, events = [] }: Props) {
         </div>
 
         <div className="trend-box">
-
-
           <div className="trend-chart">
             <svg viewBox="0 0 260 120" preserveAspectRatio="none">
               <defs>
@@ -88,7 +60,6 @@ export default function CorrelationScore({ correlation, events = [] }: Props) {
                 </linearGradient>
               </defs>
 
-              {/* Grid */}
               <line className="axis-line" x1="32" y1="14" x2="32" y2="94" />
               <line className="axis-line" x1="32" y1="94" x2="248" y2="94" />
 
@@ -101,7 +72,6 @@ export default function CorrelationScore({ correlation, events = [] }: Props) {
               <line className="grid-line" x1="182" y1="14" x2="182" y2="94" />
               <line className="grid-line" x1="232" y1="14" x2="232" y2="94" />
 
-              {/* Axis labels */}
               <text className="y-axis-label" x="4" y="18">1.0</text>
               <text className="y-axis-label" x="4" y="58">0.5</text>
               <text className="y-axis-label" x="4" y="98">0.0</text>
@@ -110,13 +80,8 @@ export default function CorrelationScore({ correlation, events = [] }: Props) {
               <text className="x-axis-label" x="136" y="114">{xLabels[1]}</text>
               <text className="x-axis-label" x="214" y="114">{xLabels[2]}</text>
 
-              {/* Risk area */}
-              <polygon
-                points={areaPoints}
-                fill="url(#riskAreaGradient)"
-              />
+              <polygon points={areaPoints} fill="url(#riskAreaGradient)" />
 
-              {/* Trend line */}
               <polyline
                 points={linePoints}
                 fill="none"
@@ -146,16 +111,34 @@ export default function CorrelationScore({ correlation, events = [] }: Props) {
   );
 }
 
-function getLevel(percentage: number) {
-  if (percentage >= 80) {
+function buildHistory(correlation: Correlation | null): CorrelationHistoryPoint[] {
+  const backendHistory = correlation?.history ?? [];
+
+  if (backendHistory.length > 0) {
+    return backendHistory.filter((point) => typeof point.confidence === "number");
+  }
+
+  return [
+    {
+      timestamp: new Date().toISOString(),
+      confidence: correlation?.confidence ?? 0,
+      level: correlation?.level ?? "low",
+    },
+  ];
+}
+
+function getLevelFromCorrelation(correlation: Correlation | null, percentage: number) {
+  const backendLevel = correlation?.level;
+
+  if (backendLevel === "critical") {
     return { label: "CRITICAL", className: "critical" };
   }
 
-  if (percentage >= 60) {
+  if (backendLevel === "high") {
     return { label: "HIGH CONFIDENCE", className: "high" };
   }
 
-  if (percentage >= 40) {
+  if (backendLevel === "medium") {
     return { label: "MEDIUM", className: "medium" };
   }
 
@@ -167,15 +150,14 @@ function getLevel(percentage: number) {
 }
 
 /**
- * Turns sparse scenario states into a denser display series.
- * This makes the graph read like live telemetry while preserving
- * the actual confidence endpoint.
+ * Backend history is source-of-truth.
+ * This only smooths sparse points for display.
  */
-function buildDisplaySeries(history: TrendPoint[]) {
+function buildDisplaySeries(history: CorrelationHistoryPoint[]) {
   const rawValues = history.map((point) => point.confidence);
 
   if (rawValues.length <= 1) {
-    return [0, 0, 0];
+    return [0, rawValues[0] ?? 0, rawValues[0] ?? 0];
   }
 
   const output: number[] = [];
@@ -191,8 +173,6 @@ function buildDisplaySeries(history: TrendPoint[]) {
     for (let j = 1; j <= samples; j++) {
       const t = j / (samples + 1);
       const base = start + (end - start) * t;
-
-      // Small deterministic variation so the line feels like a sensor trend.
       const wiggle = Math.sin((i + 1) * (j + 2)) * 0.025;
       const value = clamp(base + wiggle, 0, 1);
 
@@ -240,26 +220,22 @@ function toSvgPoints(values: number[]): SvgPoint[] {
   });
 }
 
-function getXAxisLabels(history: TrendPoint[]) {
+function getXAxisLabels(history: CorrelationHistoryPoint[]) {
   if (history.length <= 1) {
     return ["--:--", "--:--", "--:--"];
   }
 
-  const first = history[0]?.label ?? "--:--";
-  const middle = history[Math.floor(history.length / 2)]?.label ?? "--:--";
-  const last = history[history.length - 1]?.label ?? "--:--";
+  const first = history[0]?.timestamp ?? "";
+  const middle = history[Math.floor(history.length / 2)]?.timestamp ?? "";
+  const last = history[history.length - 1]?.timestamp ?? "";
 
-  return [shortTime(first), shortTime(middle), shortTime(last)];
+  return [formatTime(first), formatTime(middle), formatTime(last)];
 }
 
-function getLatestEventTime(events: EventLike[]) {
-  const latest = events[events.length - 1];
+function formatTime(value: string) {
+  if (!value) return "--:--";
 
-  if (!latest?.timestamp) {
-    return "--:--";
-  }
-
-  const date = new Date(latest.timestamp);
+  const date = new Date(value);
 
   if (Number.isNaN(date.getTime())) {
     return "--:--";
@@ -270,18 +246,6 @@ function getLatestEventTime(events: EventLike[]) {
     minute: "2-digit",
     hour12: false,
   });
-}
-
-function shortTime(value: string) {
-  if (!value || value === "--:--") return "--:--";
-
-  const parts = value.split(":");
-
-  if (parts.length >= 2) {
-    return `${parts[0]}:${parts[1]}`;
-  }
-
-  return value;
 }
 
 function clamp(value: number, min: number, max: number) {
