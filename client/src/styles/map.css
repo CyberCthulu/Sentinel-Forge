@@ -166,36 +166,46 @@
 }
 
 /* Asset Status panel */
+
 .asset-panel {
   display: flex;
   flex-direction: column;
   min-height: 0;
 }
 
+.asset-panel .panel-header {
+  flex: 0 0 28px;
+}
+
 .asset-list {
   flex: 1;
   min-height: 0;
-  padding: 8px 10px;
-  display: grid;
-  align-content: start;
-  gap: 6px;
+  padding: 8px 10px 10px;
+  display: flex;
+  flex-direction: column;
   overflow-y: auto;
 }
 
 .asset-list div {
+  flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
+  gap: 12px;
   border-bottom: 1px solid rgba(84, 139, 184, 0.12);
-  padding-bottom: 6px;
+  padding: 7px 0;
   font-size: 10.5px;
 }
 
 .asset-list span {
   color: #dbeafe;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .asset-list strong {
   color: var(--green);
+  white-space: nowrap;
 }
 
 .asset-list strong.active {

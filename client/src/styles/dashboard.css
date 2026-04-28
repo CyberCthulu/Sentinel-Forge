@@ -1,17 +1,20 @@
+/* styles/dashboard.css */
+
 .dashboard-shell {
-  height: 100%;
-  padding: 10px 14px 8px;
+  height: 100dvh;
+  padding: 8px 10px 6px;
   display: grid;
-  grid-template-rows: 88px minmax(0, 1fr) 26px;
-  gap: 8px;
+  grid-template-rows: 78px minmax(0, 1fr) 28px;
+  gap: 7px;
   overflow: hidden;
 }
 
+/* Main 3-column command layout */
 .dashboard-grid {
   min-height: 0;
   display: grid;
-  grid-template-columns: 1.02fr 1.2fr 1.45fr;
-  gap: 10px;
+  grid-template-columns: 1.02fr 1.25fr 1.5fr;
+  gap: 8px;
 }
 
 .left-column,
@@ -19,21 +22,21 @@
 .right-column {
   min-height: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .left-column {
   grid-template-rows: minmax(0, 1fr);
 }
 
-/* Give Signal panel enough room, but make map slightly shorter */
+/* Signal breakdown shorter, operational map larger */
 .middle-column {
-  grid-template-rows: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-rows: minmax(0, 0.82fr) minmax(0, 1.18fr);
 }
 
-/* Key fix: incident gets more room, asset status gets less fixed pressure */
+/* Correlation fixed, incident compact, assets gets remaining space */
 .right-column {
-  grid-template-rows: 174px 170px minmax(0, 1fr);
+  grid-template-rows: 158px 154px minmax(0, 1fr);
 }
 
 .panel {
@@ -49,9 +52,9 @@
 }
 
 .panel-header {
-  height: 30px;
-  flex: 0 0 30px;
-  padding: 0 12px;
+  height: 28px;
+  flex: 0 0 28px;
+  padding: 0 11px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -60,36 +63,31 @@
 
 .panel-header h2 {
   margin: 0;
-  font-size: 12px;
+  font-size: 11.5px;
   letter-spacing: 0.08em;
   color: #e8f3ff;
 }
 
 .dashboard-footer {
   min-height: 0;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   color: #668096;
-  font-size: 11px;
+  font-size: 10.5px;
   letter-spacing: 0.06em;
+  white-space: nowrap;
+  overflow: hidden;
+  border-top: 1px solid rgba(84, 139, 184, 0.12);
+  padding-top: 2px;
+}
+
+.dashboard-footer span {
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dashboard-footer span:nth-child(4) {
   color: var(--green);
-}
-
-/* Laptop/small-height fallback */
-@media (max-height: 820px) {
-  html,
-  body,
-  #root {
-    overflow-y: auto;
-  }
-
-  .dashboard-shell {
-    min-height: 900px;
-    height: auto;
-    overflow: visible;
-  }
 }
