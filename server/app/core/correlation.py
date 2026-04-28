@@ -1,9 +1,23 @@
 # app/core/correlation.py
 
-def correlate(signals):
+from datetime import datetime, timezone
+
+
+def now():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def correlate(signals, previous_history=None):
     """
     signals: list[Signal]
+
+    Returns frontend-safe correlation object.
+
+    This keeps confidence scoring backend-derived and tracks confidence history
+    so the frontend correlation graph can become real instead of locally simulated.
     """
+
+    previous_history = previous_history or []
 
     if not signals:
         return {
@@ -11,6 +25,7 @@ def correlate(signals):
             "cyberCount": 0,
             "physicalCount": 0,
             "signals": [],
+            "history": previous_history,
         }
 
     # -----------------------
@@ -26,11 +41,25 @@ def correlate(signals):
     physical_count = sum(1 for s in signals if s.domain == "physical")
 
     # -----------------------
-    # Return simple, consistent shape
+    # Correlation history
     # -----------------------
+    last = previous_history[-1] if previous_history else None
+
+    if not last or last.get("confidence") != confidence:
+        history = [
+            *previous_history,
+            {
+                "timestamp": now(),
+                "confidence": confidence,
+            },
+        ][-12:]
+    else:
+        history = previous_history
+
     return {
         "confidence": confidence,
         "cyberCount": cyber_count,
         "physicalCount": physical_count,
         "signals": signals,
+        "history": history,
     }

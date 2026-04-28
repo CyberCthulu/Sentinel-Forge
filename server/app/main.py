@@ -1,29 +1,16 @@
+# app/main.py
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.scenario import run_scenario
 from app.core.pipeline import run_pipeline
-
-app = FastAPI()
-
-
-# -----------------------
-# STATE
-# -----------------------
-
-def build_initial_state():
-    return {
-        "events": [],
-        "signals": [],
-        "correlation": {"confidence": 0},  # ✅ ADD THIS
-        "incident": None,
-        "map_state": {"tracks": []},
-
-    }
+from app.state.store import StateStore
 
 
-state = build_initial_state()
-step_counter = 0
+app = FastAPI(title="Sentinel Forge API")
+
+store = StateStore()
 
 
 # -----------------------
@@ -32,48 +19,41 @@ step_counter = 0
 
 @app.post("/simulate/start")
 def start_simulation():
-    global state, step_counter
-
-    state = build_initial_state()
-    step_counter = 0
-
-    return state
+    state = store.reset()
+    state["meta"]["status"] = "running"
+    return store.replace(state)
 
 
 @app.post("/simulate/step")
 def step_simulation():
-    global state, step_counter
+    state = store.get()
+    step = store.get_step()
 
-    event = run_scenario(step_counter)
-    step_counter += 1
+    event = run_scenario(step)
+    store.increment_step()
 
     if event:
-        state["events"].append(event)
+        state = store.append_event(event)
 
-    result = run_pipeline(state["events"])
+    result = run_pipeline(
+        state["events"],
+        previous_correlation=state.get("correlation"),
+    )
 
-    state["signals"] = result["signals"]
-    state["incident"] = result["incident"]
-    state["map_state"] = result["map_state"]
-    state["correlation"] = result["correlation"]
+    state = store.apply_pipeline_result(result)
+    state["meta"]["status"] = "running" if event else "complete"
 
-
-    return state
+    return store.replace(state)
 
 
 @app.get("/state")
 def get_state():
-    return state
+    return store.get()
 
 
 @app.post("/reset")
 def reset():
-    global state, step_counter
-
-    state = build_initial_state()
-    step_counter = 0
-
-    return state
+    return store.reset()
 
 
 # -----------------------
