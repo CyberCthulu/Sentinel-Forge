@@ -98,3 +98,11 @@
 .time-box strong {
   font-size: 13px;
 }
+
+.time-box small {
+  display: block;
+  margin-top: 1px;
+  color: var(--muted);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+}
