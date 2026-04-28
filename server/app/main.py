@@ -49,6 +49,9 @@ def step_simulation():
         previous_correlation=state.get("correlation"),
     )
 
+    # Keep canonical/normalized events in state.
+    state["events"] = result.get("events", state["events"])
+
     state = store.apply_pipeline_result(result)
     state["meta"]["status"] = "running" if event else "complete"
     state["meta"]["mode"] = "demo"

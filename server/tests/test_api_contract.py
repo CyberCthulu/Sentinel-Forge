@@ -95,6 +95,30 @@ class SimulationApiContractTest(unittest.TestCase):
         self.assertIsNone(payload["incident"])
         self.assertEqual(payload["map_state"]["tracks"], [])
 
+    def test_events_are_normalized_after_step(self):
+        self.client.post("/simulate/start")
+
+        response = self.client.post("/simulate/step")
+        self.assertEqual(response.status_code, 200)
+
+        payload = response.json()
+        self.assertEqual(len(payload["events"]), 1)
+
+        event = payload["events"][0]
+
+        self.assertIn("id", event)
+        self.assertIn("timestamp", event)
+        self.assertIn("type", event)
+        self.assertIn("source", event)
+        self.assertIn("domain", event)
+        self.assertIn("severity", event)
+        self.assertIn("message", event)
+        self.assertIn("raw", event)
+        self.assertIn("metadata", event)
+
+        self.assertIn(event["domain"], ["cyber", "physical", "osint", "unknown"])
+        self.assertIn(event["severity"], ["low", "medium", "high", "critical", "unknown"])
+
 
 if __name__ == "__main__":
     unittest.main()

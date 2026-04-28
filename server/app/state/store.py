@@ -76,6 +76,31 @@ class StateStore:
         return self.get()
 
     def apply_pipeline_result(self, result: dict[str, Any]) -> dict[str, Any]:
+        if "events" in result:
+            self._state["events"] = result.get("events", [])
+
+        self._state["signals"] = result.get("signals", [])
+        self._state["correlation"] = result.get(
+            "correlation",
+            {
+                "confidence": 0,
+                "cyberCount": 0,
+                "physicalCount": 0,
+                "signals": [],
+                "history": [],
+            },
+        )
+        self._state["incident"] = result.get("incident")
+        self._state["map_state"] = result.get(
+            "map_state",
+            {
+                "tracks": [],
+                "assets": [],
+                "zones": [],
+                "threat_paths": [],
+            },
+        )
+        return self.get()
         self._state["signals"] = result.get("signals", [])
         self._state["correlation"] = result.get(
             "correlation",

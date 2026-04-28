@@ -1,5 +1,6 @@
 # app/core/pipeline.py
 
+from app.normalization.normalizer import normalize_events
 from app.core.detection import detect, serialize_signal
 from app.core.correlation import correlate
 from app.core.interpreter import interpret
@@ -11,9 +12,14 @@ def run_pipeline(events, previous_correlation=None):
     previous_history = previous_correlation.get("history", [])
 
     # -----------------------
+    # Normalize
+    # -----------------------
+    normalized_events = normalize_events(events)
+
+    # -----------------------
     # Detect signals
     # -----------------------
-    signals = detect(events)
+    signals = detect(normalized_events)
 
     # -----------------------
     # Correlate
@@ -28,7 +34,7 @@ def run_pipeline(events, previous_correlation=None):
     # -----------------------
     # Map state
     # -----------------------
-    map_state = build_map_state(events)
+    map_state = build_map_state(normalized_events)
 
     # -----------------------
     # Serialize signals
@@ -50,6 +56,7 @@ def run_pipeline(events, previous_correlation=None):
     # Final response
     # -----------------------
     return {
+        "events": normalized_events,
         "signals": serialized_signals,
         "correlation": serialized_correlation,
         "incident": incident,
