@@ -39,18 +39,33 @@ class SimulationApiContractTest(unittest.TestCase):
         self.assertIn("zones", payload["map_state"])
         self.assertIn("threat_paths", payload["map_state"])
 
+    def test_normal_events_do_not_trigger_signals_immediately(self):
+        self.client.post("/simulate/start")
+
+        for _ in range(3):
+            response = self.client.post("/simulate/step")
+            self.assertEqual(response.status_code, 200)
+
+        payload = response.json()
+
+        self.assertEqual(len(payload["events"]), 3)
+        self.assertEqual(payload["signals"], [])
+        self.assertEqual(payload["correlation"]["confidence"], 0)
+        self.assertIsNone(payload["incident"])
+
     def test_signals_progress_and_incident_triggers(self):
         self.client.post("/simulate/start")
 
         payload = None
 
-        for _ in range(6):
+        # Step through full richer scenario.
+        for _ in range(18):
             response = self.client.post("/simulate/step")
             self.assertEqual(response.status_code, 200)
             payload = response.json()
 
         self.assertIsNotNone(payload)
-        self.assertEqual(len(payload["events"]), 6)
+        self.assertEqual(len(payload["events"]), 18)
 
         signal_kinds = {signal["kind"] for signal in payload["signals"]}
 

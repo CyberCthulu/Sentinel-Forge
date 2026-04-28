@@ -9,7 +9,11 @@ def detect(events):
     # -----------------------
     # FAILED LOGIN BURST
     # -----------------------
-    failed = [e for e in events if e["type"] == "auth.failed"]
+    failed = [
+        e for e in events
+        if e["type"] == "auth.failed"
+        and e.get("metadata", {}).get("user") == "admin"
+    ]
 
     if len(failed) >= 3:
         signals.append(
@@ -20,7 +24,7 @@ def detect(events):
                 weight=0.18,
                 evidence=[e["id"] for e in failed],
                 label="Failed Authentication Burst",
-                description="Multiple failed authentication attempts observed in the event window.",
+                description="Multiple failed admin authentication attempts observed in the event window.",
                 source="auth-rule",
             )
         )
@@ -28,18 +32,25 @@ def detect(events):
     # -----------------------
     # ANOMALOUS LOGIN
     # -----------------------
-    success = [e for e in events if e["type"] == "auth.success"]
+    suspicious_success = [
+        e for e in events
+        if e["type"] == "auth.success"
+        and (
+            e.get("metadata", {}).get("unfamiliar_ip") is True
+            or e.get("metadata", {}).get("known_source") is False
+        )
+    ]
 
-    if success:
+    if suspicious_success:
         signals.append(
             Signal(
                 id="sig-anomalous-login",
                 kind="auth.anomalous_login",
                 domain="cyber",
                 weight=0.22,
-                evidence=[e["id"] for e in success],
+                evidence=[e["id"] for e in suspicious_success],
                 label="Suspicious Login",
-                description="Successful login occurred after failed authentication attempts.",
+                description="Successful login occurred from an unfamiliar source.",
                 source="auth-rule",
             )
         )
@@ -49,16 +60,30 @@ def detect(events):
     # -----------------------
     lateral = [e for e in events if e["type"] == "network.lateral"]
 
-    if lateral:
+    node_access = [
+        e for e in events
+        if e["type"] == "node.access"
+        and e.get("metadata", {}).get("rapid_sequence") is True
+    ]
+
+    unique_nodes = {
+        e.get("metadata", {}).get("node")
+        for e in node_access
+        if e.get("metadata", {}).get("node")
+    }
+
+    if lateral or len(unique_nodes) >= 3:
+        evidence = [e["id"] for e in lateral] or [e["id"] for e in node_access]
+
         signals.append(
             Signal(
                 id="sig-lateral",
                 kind="network.lateral_movement",
                 domain="cyber",
                 weight=0.26,
-                evidence=[e["id"] for e in lateral],
+                evidence=evidence,
                 label="Rapid Lateral Movement",
-                description="Movement across internal nodes suggests active intrusion behavior.",
+                description="Rapid access across internal nodes suggests active intrusion behavior.",
                 source="network-rule",
             )
         )

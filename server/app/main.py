@@ -3,7 +3,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.core.scenario import run_scenario
+from app.adapters.mock import MockAdapter
+from app.core.scenario import build_scenario_events
 from app.core.pipeline import run_pipeline
 from app.state.store import StateStore
 
@@ -11,6 +12,12 @@ from app.state.store import StateStore
 app = FastAPI(title="Sentinel Forge API")
 
 store = StateStore()
+adapter = MockAdapter({"events": build_scenario_events()})
+
+
+def reset_adapter():
+    global adapter
+    adapter = MockAdapter({"events": build_scenario_events()})
 
 
 # -----------------------
@@ -19,17 +26,19 @@ store = StateStore()
 
 @app.post("/simulate/start")
 def start_simulation():
+    reset_adapter()
+
     state = store.reset()
     state["meta"]["status"] = "running"
+    state["meta"]["mode"] = "demo"
     return store.replace(state)
 
 
 @app.post("/simulate/step")
 def step_simulation():
     state = store.get()
-    step = store.get_step()
 
-    event = run_scenario(step)
+    event = adapter.fetch_next_event()
     store.increment_step()
 
     if event:
@@ -42,6 +51,7 @@ def step_simulation():
 
     state = store.apply_pipeline_result(result)
     state["meta"]["status"] = "running" if event else "complete"
+    state["meta"]["mode"] = "demo"
 
     return store.replace(state)
 
@@ -53,6 +63,7 @@ def get_state():
 
 @app.post("/reset")
 def reset():
+    reset_adapter()
     return store.reset()
 
 
