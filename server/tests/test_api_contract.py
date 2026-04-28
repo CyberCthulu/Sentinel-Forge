@@ -33,6 +33,10 @@ class SimulationApiContractTest(unittest.TestCase):
         self.assertEqual(payload["correlation"]["cyberCount"], 0)
         self.assertEqual(payload["correlation"]["physicalCount"], 0)
         self.assertEqual(payload["correlation"]["signals"], [])
+        self.assertEqual(payload["correlation"]["level"], "low")
+        self.assertEqual(payload["correlation"]["osintCount"], 0)
+        self.assertEqual(payload["correlation"]["explanation"], [])
+        self.assertIn("scoreBreakdown", payload["correlation"])
 
         self.assertIn("tracks", payload["map_state"])
         self.assertIn("assets", payload["map_state"])
@@ -76,6 +80,13 @@ class SimulationApiContractTest(unittest.TestCase):
         self.assertIn("identity.privilege_escalation", signal_kinds)
         self.assertIn("network.data_exfiltration", signal_kinds)
         self.assertIn("osint.ais_anomaly", signal_kinds)
+        self.assertEqual(payload["correlation"]["level"], "critical")
+        self.assertGreaterEqual(payload["correlation"]["osintCount"], 1)
+        self.assertGreaterEqual(len(payload["correlation"]["explanation"]), 1)
+        self.assertIn("scoreBreakdown", payload["correlation"])
+        self.assertGreaterEqual( payload["correlation"]["scoreBreakdown"]["crossDomainBonus"],
+        0.1,
+    )
 
         self.assertIsNotNone(payload["incident"])
         self.assertEqual(payload["incident"]["severity"], "critical")

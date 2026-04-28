@@ -5,6 +5,27 @@ from copy import deepcopy
 from typing import Any
 
 
+def build_empty_correlation() -> dict[str, Any]:
+    return {
+        "confidence": 0,
+        "level": "low",
+        "cyberCount": 0,
+        "physicalCount": 0,
+        "osintCount": 0,
+        "signals": [],
+        "history": [],
+        "explanation": [],
+        "scoreBreakdown": {
+            "base": 0,
+            "evidenceBonus": 0,
+            "diversityBonus": 0,
+            "crossDomainBonus": 0,
+            "escalationBonus": 0,
+            "raw": 0,
+        },
+    }
+
+
 def build_initial_state() -> dict[str, Any]:
     """
     Canonical API state shape.
@@ -15,13 +36,7 @@ def build_initial_state() -> dict[str, Any]:
     return {
         "events": [],
         "signals": [],
-        "correlation": {
-            "confidence": 0,
-            "cyberCount": 0,
-            "physicalCount": 0,
-            "signals": [],
-            "history": [],
-        },
+        "correlation": build_empty_correlation(),
         "incident": None,
         "map_state": {
             "tracks": [],
@@ -82,13 +97,7 @@ class StateStore:
         self._state["signals"] = result.get("signals", [])
         self._state["correlation"] = result.get(
             "correlation",
-            {
-                "confidence": 0,
-                "cyberCount": 0,
-                "physicalCount": 0,
-                "signals": [],
-                "history": [],
-            },
+            build_empty_correlation(),
         )
         self._state["incident"] = result.get("incident")
         self._state["map_state"] = result.get(
@@ -100,26 +109,5 @@ class StateStore:
                 "threat_paths": [],
             },
         )
-        return self.get()
-        self._state["signals"] = result.get("signals", [])
-        self._state["correlation"] = result.get(
-            "correlation",
-            {
-                "confidence": 0,
-                "cyberCount": 0,
-                "physicalCount": 0,
-                "signals": [],
-                "history": [],
-            },
-        )
-        self._state["incident"] = result.get("incident")
-        self._state["map_state"] = result.get(
-            "map_state",
-            {
-                "tracks": [],
-                "assets": [],
-                "zones": [],
-                "threat_paths": [],
-            },
-        )
+
         return self.get()

@@ -22,7 +22,7 @@ def run_pipeline(events, previous_correlation=None):
     signals = detect(normalized_events)
 
     # -----------------------
-    # Correlate
+    # Correlate / Fuse
     # -----------------------
     correlation = correlate(signals, previous_history=previous_history)
 
@@ -39,17 +39,31 @@ def run_pipeline(events, previous_correlation=None):
     # -----------------------
     # Serialize signals
     # -----------------------
-    serialized_signals = [serialize_signal(s) for s in signals]
+    serialized_signals = [serialize_signal(signal) for signal in signals]
 
     # -----------------------
     # Serialize correlation
     # -----------------------
     serialized_correlation = {
         "confidence": correlation["confidence"],
+        "level": correlation.get("level", "low"),
         "cyberCount": correlation["cyberCount"],
         "physicalCount": correlation["physicalCount"],
-        "signals": [serialize_signal(s) for s in correlation["signals"]],
+        "osintCount": correlation.get("osintCount", 0),
+        "signals": [serialize_signal(signal) for signal in correlation["signals"]],
         "history": correlation.get("history", []),
+        "explanation": correlation.get("explanation", []),
+        "scoreBreakdown": correlation.get(
+            "scoreBreakdown",
+            {
+                "base": 0,
+                "evidenceBonus": 0,
+                "diversityBonus": 0,
+                "crossDomainBonus": 0,
+                "escalationBonus": 0,
+                "raw": 0,
+            },
+        ),
     }
 
     # -----------------------
