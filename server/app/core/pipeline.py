@@ -34,7 +34,7 @@ def run_pipeline(events, previous_correlation=None):
     # -----------------------
     # Map state
     # -----------------------
-    map_state = build_map_state(normalized_events)
+    map_state = build_map_state(normalized_events, signals=signals)
 
     # -----------------------
     # Serialize signals

@@ -133,6 +133,44 @@ class SimulationApiContractTest(unittest.TestCase):
         self.assertIn(event["domain"], ["cyber", "physical", "osint", "unknown"])
         self.assertIn(event["severity"], ["low", "medium", "high", "critical", "unknown"])
 
+    def test_map_state_updates_from_signals(self):
+        self.client.post("/simulate/start")
+
+        payload = None
+
+        for _ in range(18):
+            response = self.client.post("/simulate/step")
+            self.assertEqual(response.status_code, 200)
+            payload = response.json()
+
+        self.assertIsNotNone(payload)
+
+        map_state = payload["map_state"]
+
+        self.assertIn("assets", map_state)
+        self.assertIn("zones", map_state)
+        self.assertIn("tracks", map_state)
+        self.assertIn("threat_paths", map_state)
+        self.assertIn("risk_level", map_state)
+
+        self.assertGreaterEqual(len(map_state["assets"]), 5)
+        self.assertGreaterEqual(len(map_state["zones"]), 1)
+        self.assertGreaterEqual(len(map_state["tracks"]), 2)
+        self.assertGreaterEqual(len(map_state["threat_paths"]), 3)
+
+        self.assertEqual(map_state["risk_level"], "critical")
+
+        asset_statuses = {
+            asset["name"]: asset["status"]
+            for asset in map_state["assets"]
+        }
+
+        self.assertEqual(asset_statuses["AUTH SERVER"], "alerting")
+        self.assertEqual(asset_statuses["EDR SENSOR NETWORK"], "alerting")
+        self.assertEqual(asset_statuses["NETWORK GATEWAY"], "alerting")
+        self.assertEqual(asset_statuses["UAS MONITORING"], "active")
+        self.assertEqual(asset_statuses["AIS MONITORING"], "active")    
+
 
 if __name__ == "__main__":
     unittest.main()
