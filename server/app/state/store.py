@@ -38,6 +38,7 @@ def build_initial_state() -> dict[str, Any]:
         "signals": [],
         "correlation": build_empty_correlation(),
         "incident": None,
+        "agent": None,
         "map_state": {
             "tracks": [],
             "assets": [],
@@ -100,6 +101,7 @@ class StateStore:
             build_empty_correlation(),
         )
         self._state["incident"] = result.get("incident")
+        self._state["agent"] = result.get("agent")
         self._state["map_state"] = result.get(
             "map_state",
             {

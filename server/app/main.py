@@ -7,6 +7,11 @@ from app.adapters.mock import MockAdapter
 from app.core.scenario import build_scenario_events
 from app.core.pipeline import run_pipeline
 from app.state.store import StateStore
+from dotenv import load_dotenv
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parents[2]
+load_dotenv(ROOT_DIR / ".env")
 
 
 app = FastAPI(title="Sentinel Forge API")

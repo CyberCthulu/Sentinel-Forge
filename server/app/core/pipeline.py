@@ -5,45 +5,35 @@ from app.core.detection import detect, serialize_signal
 from app.core.correlation import correlate
 from app.core.interpreter import interpret
 from app.core.map import build_map_state
+from app.agent.context_builder import build_agent_context
+from app.agent.agent import run_agent
+
+
+def fallback_guidance(incident):
+    return {
+        "assessment": "High-confidence intrusion detected",
+        "priority": "Contain immediately",
+        "next_steps": incident.get("recommended_actions", []) if incident else [],
+        "operator_note": "Fallback guidance generated because the live AI agent was unavailable.",
+    }
 
 
 def run_pipeline(events, previous_correlation=None):
     previous_correlation = previous_correlation or {}
     previous_history = previous_correlation.get("history", [])
 
-    # -----------------------
-    # Normalize
-    # -----------------------
     normalized_events = normalize_events(events)
 
-    # -----------------------
-    # Detect signals
-    # -----------------------
     signals = detect(normalized_events)
 
-    # -----------------------
-    # Correlate / Fuse
-    # -----------------------
     correlation = correlate(signals, previous_history=previous_history)
 
-    # -----------------------
-    # Interpret
-    # -----------------------
     incident = interpret(correlation) if signals else None
 
-    # -----------------------
-    # Map state
-    # -----------------------
     map_state = build_map_state(normalized_events, signals=signals)
 
-    # -----------------------
-    # Serialize signals
-    # -----------------------
     serialized_signals = [serialize_signal(signal) for signal in signals]
 
-    # -----------------------
-    # Serialize correlation
-    # -----------------------
     serialized_correlation = {
         "confidence": correlation["confidence"],
         "level": correlation.get("level", "low"),
@@ -66,13 +56,17 @@ def run_pipeline(events, previous_correlation=None):
         ),
     }
 
-    # -----------------------
-    # Final response
-    # -----------------------
+    agent_output = None
+
+    if incident:
+        agent_context = build_agent_context(serialized_correlation, incident)
+        agent_output = run_agent(agent_context) or fallback_guidance(incident)
+
     return {
         "events": normalized_events,
         "signals": serialized_signals,
         "correlation": serialized_correlation,
         "incident": incident,
         "map_state": map_state,
+        "agent": agent_output,
     }
