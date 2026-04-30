@@ -60,7 +60,7 @@ def run_pipeline(events, previous_correlation=None):
 
     if incident:
         agent_context = build_agent_context(serialized_correlation, incident)
-        agent_output = run_agent(agent_context) or fallback_guidance(incident)
+        agent_output = run_agent(agent_context)
 
     return {
         "events": normalized_events,
