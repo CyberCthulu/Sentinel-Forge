@@ -91,17 +91,30 @@ class StateStore:
         self._state["events"].append(event)
         return self.get()
 
+    def set_agent(self, agent: dict[str, Any] | None) -> dict[str, Any]:
+        self._state["agent"] = deepcopy(agent)
+        return self.get()
+
+    def clear_agent(self) -> dict[str, Any]:
+        self._state["agent"] = None
+        return self.get()
+
     def apply_pipeline_result(self, result: dict[str, Any]) -> dict[str, Any]:
         if "events" in result:
             self._state["events"] = result.get("events", [])
 
         self._state["signals"] = result.get("signals", [])
+
         self._state["correlation"] = result.get(
             "correlation",
             build_empty_correlation(),
         )
+
         self._state["incident"] = result.get("incident")
-        self._state["agent"] = result.get("agent")
+
+        if "agent" in result:
+            self._state["agent"] = result.get("agent")
+
         self._state["map_state"] = result.get(
             "map_state",
             {

@@ -6,6 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.adapters.mock import MockAdapter
 from app.core.scenario import build_scenario_events
 from app.core.pipeline import run_pipeline
+from app.api.routes.agent import router as agent_router
 from app.state.store import StateStore
 from dotenv import load_dotenv
 from pathlib import Path
@@ -18,6 +19,7 @@ app = FastAPI(title="Sentinel Forge API")
 
 store = StateStore()
 adapter = MockAdapter({"events": build_scenario_events()})
+app.include_router(agent_router)
 
 
 def reset_adapter():

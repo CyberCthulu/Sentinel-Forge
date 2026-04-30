@@ -5,8 +5,7 @@ from app.core.detection import detect, serialize_signal
 from app.core.correlation import correlate
 from app.core.interpreter import interpret
 from app.core.map import build_map_state
-from app.agent.context_builder import build_agent_context
-from app.agent.agent import run_agent
+
 
 
 def fallback_guidance(incident):
@@ -56,17 +55,10 @@ def run_pipeline(events, previous_correlation=None):
         ),
     }
 
-    agent_output = None
-
-    if incident:
-        agent_context = build_agent_context(serialized_correlation, incident)
-        agent_output = run_agent(agent_context)
-
     return {
         "events": normalized_events,
         "signals": serialized_signals,
         "correlation": serialized_correlation,
         "incident": incident,
         "map_state": map_state,
-        "agent": agent_output,
     }
