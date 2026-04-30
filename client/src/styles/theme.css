@@ -27,7 +27,6 @@ body,
 #root {
   width: 100%;
   height: 100%;
-  overflow: hidden;
 }
 
 body {
@@ -36,6 +35,8 @@ body {
     radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 35%),
     var(--bg);
   color: var(--text);
+  overflow-x: hidden;
+  overflow-y: auto;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
