@@ -1,3 +1,4 @@
+# app/agent/ollama_agent.py
 from __future__ import annotations
 
 import json
@@ -15,7 +16,7 @@ class OllamaAgent(AgentProvider):
     def __init__(self):
         self.base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
         self.model = os.getenv("OLLAMA_MODEL", "llama3.2:3b")
-        self.timeout_seconds = float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "8"))
+        self.timeout_seconds = float(os.getenv("OLLAMA_TIMEOUT_SECONDS", "30"))
 
     @property
     def name(self) -> str:
@@ -23,7 +24,7 @@ class OllamaAgent(AgentProvider):
 
     def available(self) -> bool:
         try:
-            response = httpx.get(f"{self.base_url}/api/tags", timeout=1.5)
+            response = httpx.get(f"{self.base_url}/api/tags", timeout=0.2)
             return response.status_code == 200
         except Exception:
             return False
@@ -43,8 +44,10 @@ class OllamaAgent(AgentProvider):
                     "prompt": prompt,
                     "stream": False,
                     "format": "json",
+                    "keep_alive": "10m",
                     "options": {
                         "temperature": 0.2,
+                        "num_predict": 350,
                     },
                 },
                 timeout=self.timeout_seconds,

@@ -1,20 +1,9 @@
 # app/core/pipeline.py
-
 from app.normalization.normalizer import normalize_events
 from app.core.detection import detect, serialize_signal
 from app.core.correlation import correlate
 from app.core.interpreter import interpret
 from app.core.map import build_map_state
-
-
-
-def fallback_guidance(incident):
-    return {
-        "assessment": "High-confidence intrusion detected",
-        "priority": "Contain immediately",
-        "next_steps": incident.get("recommended_actions", []) if incident else [],
-        "operator_note": "Fallback guidance generated because the live AI agent was unavailable.",
-    }
 
 
 def run_pipeline(events, previous_correlation=None):

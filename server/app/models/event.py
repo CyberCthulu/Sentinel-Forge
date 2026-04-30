@@ -1,9 +1,8 @@
 # app/models/event.py
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 
 Domain = Literal["cyber", "physical", "osint", "unknown"]
@@ -21,7 +20,7 @@ class Event:
     message: str = ""
     raw: dict[str, Any] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
-    location: dict[str, float | None] = field(
+    location: dict[str, Optional[float]] = field(
         default_factory=lambda: {"lat": None, "lon": None}
     )
 

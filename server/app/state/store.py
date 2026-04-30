@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
-from typing import Any
+from typing import Any, Optional
 
 
 def build_empty_correlation() -> dict[str, Any]:
@@ -30,8 +30,15 @@ def build_initial_state() -> dict[str, Any]:
     """
     Canonical API state shape.
 
-    This is the contract the frontend expects.
-    Do not casually change this shape.
+    The pipeline owns:
+    - events
+    - signals
+    - correlation
+    - incident
+    - map_state
+
+    The operator analyst route owns:
+    - agent
     """
     return {
         "events": [],
@@ -91,7 +98,7 @@ class StateStore:
         self._state["events"].append(event)
         return self.get()
 
-    def set_agent(self, agent: dict[str, Any] | None) -> dict[str, Any]:
+    def set_agent(self, agent: Optional[dict[str, Any]]) -> dict[str, Any]:
         self._state["agent"] = deepcopy(agent)
         return self.get()
 

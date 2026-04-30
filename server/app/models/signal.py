@@ -1,9 +1,8 @@
 # app/models/signal.py
-
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Literal
+from typing import Any, Literal, Optional
 
 
 Domain = Literal["cyber", "physical", "osint", "unknown"]
@@ -20,7 +19,7 @@ class Signal:
     active: bool = True
     description: str = ""
     source: str = "fusion-engine"
-    location: dict[str, float | None] = field(
+    location: dict[str, Optional[float]] = field(
         default_factory=lambda: {"lat": None, "lon": None}
     )
     metadata: dict[str, Any] = field(default_factory=dict)

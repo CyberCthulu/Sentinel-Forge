@@ -1,35 +1,32 @@
 # app/main.py
+from pathlib import Path
 
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.adapters.mock import MockAdapter
-from app.core.scenario import build_scenario_events
-from app.core.pipeline import run_pipeline
 from app.api.routes.agent import router as agent_router
+from app.core.pipeline import run_pipeline
+from app.core.scenario import build_scenario_events
 from app.state.store import StateStore
-from dotenv import load_dotenv
-from pathlib import Path
+
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT_DIR / ".env")
 
 
 app = FastAPI(title="Sentinel Forge API")
+app.include_router(agent_router)
 
 store = StateStore()
 adapter = MockAdapter({"events": build_scenario_events()})
-app.include_router(agent_router)
 
 
 def reset_adapter():
     global adapter
     adapter = MockAdapter({"events": build_scenario_events()})
 
-
-# -----------------------
-# ROUTES
-# -----------------------
 
 @app.post("/simulate/start")
 def start_simulation():
@@ -38,6 +35,7 @@ def start_simulation():
     state = store.reset()
     state["meta"]["status"] = "running"
     state["meta"]["mode"] = "demo"
+
     return store.replace(state)
 
 
@@ -56,10 +54,13 @@ def step_simulation():
         previous_correlation=state.get("correlation"),
     )
 
-    # Keep canonical/normalized events in state.
-    state["events"] = result.get("events", state["events"])
-
     state = store.apply_pipeline_result(result)
+
+    # A new event means the previous analyst answer may be stale.
+    # The operator can explicitly ask the analyst again from the incident popup.
+    if event:
+        state = store.clear_agent()
+
     state["meta"]["status"] = "running" if event else "complete"
     state["meta"]["mode"] = "demo"
 
@@ -76,10 +77,6 @@ def reset():
     reset_adapter()
     return store.reset()
 
-
-# -----------------------
-# CORS
-# -----------------------
 
 app.add_middleware(
     CORSMiddleware,
