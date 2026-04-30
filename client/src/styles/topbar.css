@@ -1,8 +1,14 @@
-/*styles/topbar.css*/
+/* styles/topbar.css */
+
 .topbar {
-  height: 88px;
+  min-height: 68px;
   display: grid;
-  grid-template-columns: 1.5fr 1.4fr 0.72fr 1.15fr 0.7fr;
+  grid-template-columns:
+    minmax(300px, 1.5fr)
+    minmax(320px, 1.4fr)
+    minmax(170px, 0.72fr)
+    minmax(250px, 1.15fr)
+    minmax(170px, 0.7fr);
   gap: 12px;
   align-items: center;
   border-bottom: 1px solid rgba(84, 139, 184, 0.25);
@@ -12,6 +18,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .brand-mark {
@@ -23,24 +30,30 @@
   place-items: center;
   border-radius: 10px;
   font-size: 22px;
+  flex: 0 0 auto;
 }
 
 .brand h1 {
   margin: 0;
   font-size: 24px;
   letter-spacing: 0.05em;
+  white-space: nowrap;
 }
 
 .brand p {
   margin: 2px 0 0;
   color: #8ba5bb;
   font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .topbar-controls {
   display: flex;
   justify-content: center;
   gap: 10px;
+  min-width: 0;
 }
 
 .control-btn {
@@ -51,6 +64,7 @@
   border-radius: 5px;
   font-weight: 800;
   letter-spacing: 0.04em;
+  white-space: nowrap;
 }
 
 .control-btn.start {
@@ -66,6 +80,7 @@
   border-radius: 6px;
   padding: 7px 12px;
   background: rgba(4, 10, 18, 0.6);
+  min-width: 0;
 }
 
 .runtime-status {
@@ -79,6 +94,7 @@
   height: 10px;
   background: var(--green);
   border-radius: 999px;
+  flex: 0 0 auto;
 }
 
 .runtime-clock {
@@ -97,6 +113,9 @@
 .scenario-box strong,
 .time-box strong {
   font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .time-box small {
@@ -105,4 +124,60 @@
   color: var(--muted);
   font-size: 8.5px;
   letter-spacing: 0.08em;
+}
+
+/* Medium desktop */
+@media (max-width: 1180px) {
+  .topbar {
+    grid-template-columns: minmax(280px, 1fr) minmax(320px, auto) minmax(170px, auto);
+    grid-template-areas:
+      "brand controls live"
+      "brand scenario time";
+    min-height: 110px;
+    align-items: center;
+  }
+
+  .brand {
+    grid-area: brand;
+  }
+
+  .topbar-controls {
+    grid-area: controls;
+    justify-content: start;
+  }
+
+  .runtime-status {
+    grid-area: live;
+  }
+
+  .scenario-box {
+    grid-area: scenario;
+  }
+
+  .time-box {
+    grid-area: time;
+  }
+}
+
+/* Narrow */
+@media (max-width: 900px) {
+  .topbar {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "brand"
+      "controls"
+      "live"
+      "scenario"
+      "time";
+    min-height: auto;
+  }
+
+  .topbar-controls {
+    justify-content: stretch;
+  }
+
+  .control-btn {
+    flex: 1;
+    padding-inline: 10px;
+  }
 }

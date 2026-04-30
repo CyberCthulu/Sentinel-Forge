@@ -603,3 +603,107 @@
   color: #d0d7de;
   line-height: 1.45;
 }
+
+/* =========================================================
+   Sentinel Analyst Section
+========================================================= */
+
+.analyst-section {
+  grid-column: 1 / -1;
+}
+
+.analyst-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.analyst-section-header h4 {
+  margin-bottom: 4px;
+}
+
+.analyst-section-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.analyst-btn {
+  border: 1px solid rgba(56, 189, 248, 0.45);
+  background:
+    linear-gradient(180deg, rgba(56, 189, 248, 0.16), rgba(56, 189, 248, 0.06));
+  color: #bdeeff;
+  border-radius: 6px;
+  padding: 9px 14px;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.analyst-btn:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+
+.analyst-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.analyst-loading,
+.analyst-error {
+  margin-top: 14px;
+  padding: 12px;
+  border-radius: 6px;
+  background: rgba(4, 10, 18, 0.52);
+  border: 1px solid rgba(84, 139, 184, 0.18);
+  color: var(--muted);
+}
+
+.analyst-error {
+  border-color: rgba(255, 64, 64, 0.45);
+  color: #ffb4b4;
+}
+
+.analyst-output {
+  margin-top: 14px;
+  display: grid;
+  gap: 10px;
+  color: #dbeafe;
+}
+
+.analyst-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.analyst-meta span {
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  background: rgba(56, 189, 248, 0.06);
+  color: #9bdcff;
+  border-radius: 999px;
+  padding: 4px 9px;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+}
+
+.analyst-output h5 {
+  margin: 0;
+  color: #e8f3ff;
+  font-size: 15px;
+  line-height: 1.35;
+}
+
+.analyst-output p {
+  margin: 0;
+}
+
+.analyst-output strong {
+  color: #ffb4b4;
+}
+
+.analyst-output ul {
+  margin-top: 8px;
+}

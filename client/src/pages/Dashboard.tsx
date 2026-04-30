@@ -25,8 +25,11 @@ export default function Dashboard() {
         </section>
 
         <section className="dashboard-area right-top-area">
-          <CorrelationScore correlation={state.correlation}/>
-          <IncidentCard incident={state.incident} />
+          <CorrelationScore correlation={state.correlation} />
+          <IncidentCard
+            incident={state.incident}
+            correlation={state.correlation}
+          />
         </section>
 
         <section className="dashboard-area map-area">

@@ -1,8 +1,12 @@
 import { useState } from "react";
+import { analyzeIncident } from "../services/api";
 import "../styles/incident.css";
 
-export default function IncidentCard({ incident }: any) {
+export default function IncidentCard({ incident, correlation }: any) {
   const [open, setOpen] = useState(false);
+  const [agent, setAgent] = useState<any>(null);
+  const [agentLoading, setAgentLoading] = useState(false);
+  const [agentError, setAgentError] = useState<string | null>(null);
 
   if (!incident) {
     return (
@@ -21,12 +25,38 @@ export default function IncidentCard({ incident }: any) {
 
   const confidence = Math.round((incident.confidence || 0) * 100);
 
+  const handleOpen = () => {
+    setOpen(true);
+    setAgent(null);
+    setAgentError(null);
+    setAgentLoading(false);
+  };
+
+  const handleAskAnalyst = async () => {
+    setAgentLoading(true);
+    setAgentError(null);
+
+    try {
+      const result = await analyzeIncident({
+        correlation,
+        incident,
+      });
+
+      setAgent(result.agent);
+    } catch (error) {
+      console.error(error);
+      setAgentError("Sentinel Analyst is unavailable. Try again.");
+    } finally {
+      setAgentLoading(false);
+    }
+  };
+
   return (
     <>
       <button
         type="button"
         className={`panel incident-panel incident-clickable ${incident.severity}`}
-        onClick={() => setOpen(true)}
+        onClick={handleOpen}
       >
         <div className="panel-header">
           <h2>INCIDENT ASSESSMENT</h2>
@@ -71,10 +101,7 @@ export default function IncidentCard({ incident }: any) {
       </button>
 
       {open && (
-        <div
-          className="incident-modal-backdrop"
-          onClick={() => setOpen(false)}
-        >
+        <div className="incident-modal-backdrop" onClick={() => setOpen(false)}>
           <div
             className={`incident-modal ${incident.severity}`}
             onClick={(e) => e.stopPropagation()}
@@ -137,6 +164,65 @@ export default function IncidentCard({ incident }: any) {
                   threat assessment. The current classification reflects signal
                   confidence, domain coverage, and escalation pattern.
                 </p>
+              </section>
+
+              <section className="analyst-section">
+                <div className="analyst-section-header">
+                  <div>
+                    <h4>SENTINEL ANALYST</h4>
+                    <p>Operator-invoked decision support.</p>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="analyst-btn"
+                    onClick={handleAskAnalyst}
+                    disabled={agentLoading}
+                  >
+                    {agentLoading ? "ANALYZING..." : "ASK ANALYST"}
+                  </button>
+                </div>
+
+                {agentError && <p className="analyst-error">{agentError}</p>}
+
+                {agentLoading && (
+                  <div className="analyst-loading">
+                    Sentinel Analyst is evaluating the incident context...
+                  </div>
+                )}
+
+                {agent && (
+                  <div className="analyst-output">
+                    <div className="analyst-meta">
+                      <span>PROVIDER: {agent.provider}</span>
+                      <span>WINDOW: {agent.decision_window}</span>
+                    </div>
+
+                    <h5>{agent.assessment}</h5>
+
+                    <p>
+                      <strong>Why it matters:</strong> {agent.why_it_matters}
+                    </p>
+
+                    <p>
+                      <strong>Operator note:</strong> {agent.operator_note}
+                    </p>
+
+                    <p>
+                      <strong>Confidence rationale:</strong>{" "}
+                      {agent.confidence_rationale}
+                    </p>
+
+                    <div>
+                      <strong>Next steps:</strong>
+                      <ul>
+                        {agent.next_steps?.map((step: string, i: number) => (
+                          <li key={i}>{step}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                )}
               </section>
             </div>
           </div>
