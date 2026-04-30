@@ -37,7 +37,6 @@ def run_agent(context: dict):
                 {"role": "system", "content": SYSTEM_PROMPT},
                 {"role": "user", "content": json.dumps(context)},
             ],
-            temperature=0.2,
         )
 
         content = response.choices[0].message.content
