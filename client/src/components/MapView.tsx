@@ -7,10 +7,43 @@ import "../styles/map.css";
 
 const GATEWAY: [number, number] = [-122.4108, 37.7794];
 const HQ_NODE: [number, number] = [-122.3694, 37.7936];
+
+/**
+ * Sector B is the protected perimeter / defended zone.
+ * Threat contacts should appear around it, not directly on top of it.
+ */
 const SECTOR_B: [number, number] = [-122.3134, 37.8258];
 
 const UAS_START: [number, number] = [-122.3625, 37.7082];
 const UAS_MID: [number, number] = [-122.3382, 37.7654];
+
+const UAS_CONTACTS: Array<{
+  id: string;
+  label: string;
+  icon: string;
+  position: [number, number];
+}> = [
+  {
+    id: "uas-01",
+    label: "UAS-01",
+    icon: "◉",
+    position: [-122.3218, 37.8138],
+  },
+  {
+    id: "uas-02",
+    label: "UAS-02",
+    icon: "◌",
+    position: [-122.3028, 37.8335],
+  },
+  {
+    id: "uas-03",
+    label: "UAS-03",
+    icon: "◍",
+    position: [-122.3308, 37.8425],
+  },
+];
+
+const UAS_APPROACH_POINT: [number, number] = UAS_CONTACTS[0].position;
 
 const VESSEL_START: [number, number] = [-122.5102, 37.8382];
 const VESSEL_MID: [number, number] = [-122.432, 37.832];
@@ -301,7 +334,7 @@ function addSourcesAndLayers(instance: maplibregl.Map) {
 
   instance.addSource("uas-track", {
     type: "geojson",
-    data: lineFeature([UAS_START, UAS_MID, SECTOR_B]),
+    data: lineFeature([UAS_START, UAS_MID, UAS_APPROACH_POINT]),
   });
 
   instance.addSource("vessel-track", {
@@ -383,7 +416,7 @@ function updateMapData(
   const sectorSource = instance.getSource("sector-b") as maplibregl.GeoJSONSource;
 
   if (uasSource) {
-    uasSource.setData(lineFeature([UAS_START, UAS_MID, SECTOR_B]));
+    uasSource.setData(lineFeature([UAS_START, UAS_MID, UAS_APPROACH_POINT]));
   }
 
   if (vesselSource) {
@@ -414,7 +447,7 @@ function updateMapData(
     instance.setPaintProperty(
       "sector-b-fill",
       "fill-opacity",
-      args.isElevated ? 0.22 : 0.06
+      args.isElevated ? 0.2 : 0.06
     );
   }
 
@@ -422,7 +455,7 @@ function updateMapData(
     instance.setPaintProperty(
       "sector-b-line",
       "line-opacity",
-      args.isElevated ? 0.92 : 0.28
+      args.isElevated ? 0.86 : 0.28
     );
   }
 }
@@ -446,15 +479,29 @@ function buildMarkers(args: {
   );
 
   markers.push(
-    makeMarker(isElevated ? "sector active" : "sector", "", "SECTOR B")
+    makeMarker(
+      isElevated ? "sector active" : "sector",
+      "",
+      "PROTECTED ZONE B"
+    )
       .setLngLat(SECTOR_B)
       .addTo(instance)
   );
 
   if (hasDrone) {
-    markers.push(
-      makeMarker("threat active", "◉", "UAS").setLngLat(SECTOR_B).addTo(instance)
-    );
+    UAS_CONTACTS.forEach((contact, index) => {
+      markers.push(
+        makeMarker(
+          index === 0
+            ? "threat active primary-uas"
+            : "threat active secondary-uas",
+          contact.icon,
+          contact.label
+        )
+          .setLngLat(contact.position)
+          .addTo(instance)
+      );
+    });
   }
 
   if (hasVessel) {
