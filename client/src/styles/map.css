@@ -25,68 +25,57 @@
   color: var(--green);
 }
 
-.map-canvas {
+.real-map-shell {
   position: relative;
   flex: 1;
   min-height: 0;
-  margin: 0;
   overflow: hidden;
   background: #030a11;
 }
 
-/* Dark tactical/satellite-style base */
-.map-background {
+.real-map {
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(circle at 72% 54%, rgba(255, 64, 64, 0.13), transparent 17%),
-    radial-gradient(circle at 58% 70%, rgba(34, 211, 238, 0.08), transparent 16%),
-    radial-gradient(circle at 18% 82%, rgba(56, 189, 248, 0.08), transparent 18%),
-    linear-gradient(135deg, rgba(10, 22, 34, 0.9), rgba(2, 8, 14, 1));
+  width: 100%;
+  height: 100%;
 }
 
-/* terrain texture */
-.map-background::before {
-  content: "";
-  position: absolute;
-  inset: -20%;
-  opacity: 0.42;
-  background:
-    linear-gradient(28deg, transparent 0 34%, rgba(80, 120, 150, 0.12) 35%, transparent 37%),
-    linear-gradient(121deg, transparent 0 46%, rgba(80, 120, 150, 0.10) 47%, transparent 49%),
-    linear-gradient(8deg, transparent 0 52%, rgba(80, 120, 150, 0.08) 53%, transparent 55%),
-    radial-gradient(ellipse at 50% 60%, rgba(70, 100, 120, 0.16), transparent 44%);
-  filter: blur(0.2px);
-  transform: rotate(-4deg);
+.real-map .maplibregl-canvas {
+  outline: none;
 }
 
-/* map grid */
-.map-grid-overlay {
+.real-map .maplibregl-ctrl-bottom-right,
+.real-map .maplibregl-ctrl-bottom-left {
+  opacity: 0.55;
+  transform: scale(0.82);
+  transform-origin: bottom right;
+}
+
+.map-vignette {
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(rgba(56, 189, 248, 0.055) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(56, 189, 248, 0.055) 1px, transparent 1px);
-  background-size: 64px 64px;
-  opacity: 0.92;
   pointer-events: none;
+  background:
+    radial-gradient(circle at center, transparent 0 45%, rgba(0, 0, 0, 0.48) 100%),
+    linear-gradient(180deg, rgba(5, 12, 20, 0.2), rgba(5, 12, 20, 0.48));
+  z-index: 2;
 }
 
-/* subtle moving scan */
-.map-scanline {
+.map-scan-overlay {
   position: absolute;
   inset: -30% 0;
+  z-index: 3;
+  pointer-events: none;
   background:
     linear-gradient(
       115deg,
       transparent 0 44%,
-      rgba(34, 211, 238, 0.08) 48%,
-      rgba(34, 211, 238, 0.18) 50%,
-      rgba(251, 146, 60, 0.08) 52%,
+      rgba(34, 211, 238, 0.06) 48%,
+      rgba(34, 211, 238, 0.14) 50%,
+      rgba(251, 146, 60, 0.06) 52%,
       transparent 56% 100%
     );
   animation: mapSweep 8s linear infinite;
-  pointer-events: none;
   opacity: 0.65;
 }
 
@@ -94,20 +83,22 @@
   0% {
     transform: translateX(-22%);
   }
+
   100% {
     transform: translateX(22%);
   }
 }
 
-/* legend */
-.map-legend {
+/* Legend */
+
+.map-legend.real {
   position: absolute;
   left: 14px;
   top: 14px;
   width: 148px;
   display: grid;
   gap: 7px;
-  background: rgba(4, 10, 18, 0.76);
+  background: rgba(4, 10, 18, 0.78);
   border: 1px solid rgba(84, 139, 184, 0.25);
   border-radius: 6px;
   padding: 9px;
@@ -154,217 +145,80 @@
   border-radius: 0 !important;
 }
 
-/* SVG overlay */
-.tactical-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 2;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
+/* Geo markers */
 
-.terrain-line {
-  fill: none;
-  stroke: rgba(120, 170, 190, 0.14);
-  stroke-width: 2;
-}
-
-.terrain-line.faint {
-  stroke: rgba(120, 170, 190, 0.08);
-  stroke-width: 1.4;
-}
-
-.friendly-link {
-  fill: none;
-  stroke: rgba(34, 197, 94, 0.6);
-  stroke-width: 2.4;
-  stroke-dasharray: 8 8;
-  filter: url(#mapGlow);
-}
-
-.uas-path,
-.vessel-path {
-  fill: none;
-  stroke-width: 2.4;
-  stroke-dasharray: 10 8;
-  opacity: 0.35;
-}
-
-.uas-path {
-  stroke: rgba(251, 146, 60, 0.55);
-}
-
-.vessel-path {
-  stroke: rgba(34, 211, 238, 0.55);
-}
-
-.uas-path.active,
-.vessel-path.active {
-  opacity: 1;
-  animation: dashMove 1.4s linear infinite;
-  filter: url(#mapGlow);
-}
-
-@keyframes dashMove {
-  to {
-    stroke-dashoffset: -36;
-  }
-}
-
-.sector-zone {
-  fill: url(#sectorGradient);
-  stroke: rgba(255, 64, 64, 0.72);
-  stroke-width: 2;
-  opacity: 0.55;
-}
-
-.sector-zone.active {
-  opacity: 0.95;
-  filter: url(#mapGlow);
-}
-
-.sector-pulse {
-  fill: none;
-  stroke: rgba(255, 64, 64, 0.65);
-  stroke-width: 2;
-  opacity: 0;
-}
-
-.sector-pulse.active {
-  animation: sectorPulse 1.9s ease-out infinite;
-}
-
-@keyframes sectorPulse {
-  0% {
-    opacity: 0.85;
-    transform: scale(1);
-    transform-origin: 760px 180px;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1.55);
-    transform-origin: 760px 180px;
-  }
-}
-
-.uas-dot,
-.vessel-dot {
-  opacity: 0;
-}
-
-.uas-dot.active {
-  opacity: 1;
-  fill: var(--orange);
-  stroke: rgba(255, 255, 255, 0.65);
-  stroke-width: 2;
-  filter: url(#mapGlow);
-  animation: pointPulse 1.2s ease-in-out infinite;
-}
-
-.vessel-dot.active {
-  opacity: 1;
-  fill: var(--cyan);
-  stroke: rgba(255, 255, 255, 0.55);
-  stroke-width: 2;
-  filter: url(#mapGlow);
-  animation: pointPulse 1.7s ease-in-out infinite;
-}
-
-@keyframes pointPulse {
-  0%,
-  100% {
-    r: 8;
-  }
-  50% {
-    r: 13;
-  }
-}
-
-/* coordinate ticks */
-.map-coordinate {
-  position: absolute;
-  top: 8px;
-  z-index: 3;
-  color: rgba(148, 163, 184, 0.42);
-  font-size: 11px;
-  font-variant-numeric: tabular-nums;
-}
-
-.x16 { left: 18%; }
-.x17 { left: 31%; }
-.x18 { left: 44%; }
-.x19 { left: 57%; }
-.x20 { left: 70%; }
-.x21 { left: 83%; }
-
-/* Map objects */
-.map-node,
-.vessel,
-.sector-ring,
-.map-threat {
-  position: absolute;
-  z-index: 4;
-  font-size: 10.5px;
-  border-radius: 6px;
-  padding: 7px 9px;
-  white-space: nowrap;
-}
-
-.map-node {
+.geo-marker {
+  position: relative;
+  z-index: 10;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(56, 189, 248, 0.13);
-  border: 1px solid rgba(56, 189, 248, 0.38);
-  color: #bdeeff;
-  box-shadow: 0 0 16px rgba(56, 189, 248, 0.08);
+  white-space: nowrap;
+  border-radius: 6px;
+  padding: 7px 9px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: rgba(4, 10, 18, 0.82);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.48);
 }
 
-.node-icon {
+.geo-marker.friendly {
+  color: #bdeeff;
+  border: 1px solid rgba(56, 189, 248, 0.48);
+  background: rgba(56, 189, 248, 0.14);
+}
+
+.geo-marker.friendly .geo-marker-icon {
   color: var(--blue);
 }
 
-.gateway {
-  left: 22%;
-  bottom: 12%;
-}
-
-.hq {
-  left: 39%;
-  bottom: 21%;
-}
-
-.sector-ring {
-  right: 23%;
-  top: 18%;
+.geo-marker.sector {
   width: 118px;
-  height: 118px;
-  border: 1px solid rgba(255, 64, 64, 0.88);
+  height: 72px;
+  justify-content: center;
+  color: #ffb4b4;
+  border: 1px solid rgba(255, 64, 64, 0.82);
   background:
     radial-gradient(circle at center, rgba(255, 64, 64, 0.24), rgba(255, 64, 64, 0.08));
-  display: grid;
-  place-items: center;
-  color: #ffb4b4;
-  text-align: center;
   box-shadow:
     inset 0 0 32px rgba(255, 64, 64, 0.16),
     0 0 22px rgba(255, 64, 64, 0.12);
 }
 
-.sector-ring.active {
+.geo-marker.sector.active {
   animation: redZoneGlow 1.6s ease-in-out infinite;
 }
 
-.sector-ring span {
-  font-size: 10px;
+.geo-marker.threat {
+  color: var(--orange);
+  border: 1px solid rgba(251, 146, 60, 0.55);
+  background: rgba(251, 146, 60, 0.16);
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.45);
 }
 
-.sector-ring strong {
-  display: block;
+.geo-marker.threat.active .geo-marker-icon {
   color: var(--red);
-  font-size: 10px;
-  margin-top: -24px;
+  animation: blinkThreat 1s steps(2, end) infinite;
+}
+
+.geo-marker.vessel {
+  color: var(--cyan);
+  border: 1px solid rgba(34, 211, 238, 0.42);
+  background: rgba(34, 211, 238, 0.13);
+}
+
+.geo-marker.vessel.active {
+  box-shadow:
+    0 0 18px rgba(34, 211, 238, 0.24),
+    0 0 34px rgba(34, 211, 238, 0.09);
+}
+
+@keyframes blinkThreat {
+  50% {
+    opacity: 0.35;
+  }
 }
 
 @keyframes redZoneGlow {
@@ -374,6 +228,7 @@
       inset 0 0 28px rgba(255, 64, 64, 0.16),
       0 0 18px rgba(255, 64, 64, 0.12);
   }
+
   50% {
     box-shadow:
       inset 0 0 44px rgba(255, 64, 64, 0.28),
@@ -381,44 +236,15 @@
   }
 }
 
-.map-threat {
-  right: 30%;
-  top: 40%;
-  color: var(--orange);
-  text-shadow: 0 0 12px rgba(251, 146, 60, 0.55);
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
+/* MapLibre control polish */
+
+.maplibregl-ctrl-group {
+  background: rgba(4, 10, 18, 0.74) !important;
+  border: 1px solid rgba(84, 139, 184, 0.25) !important;
 }
 
-.threat-icon {
-  color: var(--red);
-  animation: blinkThreat 1s steps(2, end) infinite;
-}
-
-@keyframes blinkThreat {
-  50% {
-    opacity: 0.35;
-  }
-}
-
-.vessel {
-  right: 7%;
-  bottom: 18%;
-  background: rgba(34, 211, 238, 0.13);
-  border: 1px solid rgba(34, 211, 238, 0.38);
-  color: var(--cyan);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.vessel.active {
-  box-shadow: 0 0 18px rgba(34, 211, 238, 0.18);
-}
-
-.vessel-icon {
-  font-size: 9px;
+.maplibregl-ctrl button {
+  filter: invert(1) hue-rotate(170deg);
 }
 
 /* Asset Status panel */
@@ -466,27 +292,4 @@
 
 .asset-list strong.active {
   color: var(--orange);
-}
-
-/* Responsive map adjustments for tighter panel heights */
-@media (max-height: 820px) {
-  .map-legend {
-    width: 132px;
-    gap: 5px;
-    padding: 7px;
-    font-size: 8.5px;
-  }
-
-  .map-node,
-  .vessel,
-  .sector-ring,
-  .map-threat {
-    font-size: 10px;
-    padding: 6px 8px;
-  }
-
-  .sector-ring {
-    width: 104px;
-    height: 104px;
-  }
 }

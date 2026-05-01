@@ -35,11 +35,18 @@ body {
     radial-gradient(circle at top, rgba(56, 189, 248, 0.08), transparent 35%),
     var(--bg);
   color: var(--text);
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden;
   font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
 
 button {
   font-family: inherit;
+}
+
+/* Only allow document scrolling on genuinely narrow layouts. */
+@media (max-width: 980px) {
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
 }

@@ -63,22 +63,35 @@ export default function CorrelationScore({ correlation }: Props) {
               <line className="axis-line" x1="32" y1="14" x2="32" y2="94" />
               <line className="axis-line" x1="32" y1="94" x2="248" y2="94" />
 
+              {/* Y-axis grid: 5 score points */}
               <line className="grid-line" x1="32" y1="14" x2="248" y2="14" />
+              <line className="grid-line" x1="32" y1="34" x2="248" y2="34" />
               <line className="grid-line" x1="32" y1="54" x2="248" y2="54" />
+              <line className="grid-line" x1="32" y1="74" x2="248" y2="74" />
               <line className="grid-line" x1="32" y1="94" x2="248" y2="94" />
 
-              <line className="grid-line" x1="82" y1="14" x2="82" y2="94" />
-              <line className="grid-line" x1="132" y1="14" x2="132" y2="94" />
-              <line className="grid-line" x1="182" y1="14" x2="182" y2="94" />
-              <line className="grid-line" x1="232" y1="14" x2="232" y2="94" />
+              {/* X-axis grid: 5 time points */}
+              <line className="grid-line" x1="32" y1="14" x2="32" y2="94" />
+              <line className="grid-line" x1="86" y1="14" x2="86" y2="94" />
+              <line className="grid-line" x1="140" y1="14" x2="140" y2="94" />
+              <line className="grid-line" x1="194" y1="14" x2="194" y2="94" />
+              <line className="grid-line" x1="248" y1="14" x2="248" y2="94" />
 
-              <text className="y-axis-label" x="4" y="18">1.0</text>
-              <text className="y-axis-label" x="4" y="58">0.5</text>
-              <text className="y-axis-label" x="4" y="98">0.0</text>
+              {/* Y-axis labels: 5 score points */}
+              <text className="y-axis-label" x="4" y="18">100%</text>
+              <text className="y-axis-label" x="4" y="38">75%</text>
+              <text className="y-axis-label" x="4" y="58">50%</text>
+              <text className="y-axis-label" x="4" y="78">25%</text>
+              <text className="y-axis-label" x="4" y="98">0%</text>
 
-              <text className="x-axis-label" x="62" y="114">{xLabels[0]}</text>
-              <text className="x-axis-label" x="136" y="114">{xLabels[1]}</text>
-              <text className="x-axis-label" x="214" y="114">{xLabels[2]}</text>
+              {/* X-axis labels: 5 time points */}
+              <text className="x-axis-label" x="32" y="114">{xLabels[0]}</text>
+              <text className="x-axis-label" x="86" y="114">{xLabels[1]}</text>
+              <text className="x-axis-label" x="140" y="114">{xLabels[2]}</text>
+              <text className="x-axis-label" x="194" y="114">{xLabels[3]}</text>
+              <text className="x-axis-label" x="248" y="114">{xLabels[4]}</text>
+              <text className="x-axis-label" x="248" y="114">{xLabels[5]}</text>
+
 
               <polygon points={areaPoints} fill="url(#riskAreaGradient)" />
 
@@ -222,14 +235,18 @@ function toSvgPoints(values: number[]): SvgPoint[] {
 
 function getXAxisLabels(history: CorrelationHistoryPoint[]) {
   if (history.length <= 1) {
-    return ["--:--", "--:--", "--:--"];
+    return ["--:--", "--:--", "--:--", "--:--", "--:--"];
   }
 
-  const first = history[0]?.timestamp ?? "";
-  const middle = history[Math.floor(history.length / 2)]?.timestamp ?? "";
-  const last = history[history.length - 1]?.timestamp ?? "";
+  const maxLabelIndex = 4;
+  const maxHistoryIndex = history.length - 1;
 
-  return [formatTime(first), formatTime(middle), formatTime(last)];
+  return Array.from({ length: 5 }, (_, index) => {
+    const historyIndex = Math.round((index / maxLabelIndex) * maxHistoryIndex);
+    const timestamp = history[historyIndex]?.timestamp ?? "";
+
+    return formatTime(timestamp);
+  });
 }
 
 function formatTime(value: string) {
