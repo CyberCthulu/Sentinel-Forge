@@ -347,3 +347,253 @@
 .asset-row.alerting {
   border-bottom-color: rgba(255, 64, 64, 0.22);
 }
+
+/* =========================================================
+   Expanded Operational View Modal
+========================================================= */
+
+.map-panel-clickable {
+  position: relative;
+  cursor: pointer;
+}
+
+.map-panel-clickable:hover {
+  filter: brightness(1.04);
+}
+
+.map-panel-clickable:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.75);
+  outline-offset: 2px;
+}
+
+.map-expand-hint {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  z-index: 8;
+  padding: 5px 8px;
+  border: 1px solid rgba(56, 189, 248, 0.24);
+  border-radius: 999px;
+  background: rgba(4, 10, 18, 0.72);
+  color: #9bdcff;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateY(3px);
+  transition:
+    opacity 150ms ease,
+    transform 150ms ease;
+}
+
+.map-panel-clickable:hover .map-expand-hint {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.map-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(circle at center, rgba(56, 189, 248, 0.08), transparent 42%),
+    rgba(0, 0, 0, 0.84);
+}
+
+.map-modal {
+  width: min(1400px, 96vw);
+  height: min(820px, 92vh);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(56, 189, 248, 0.38);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(15, 28, 44, 0.98), rgba(5, 12, 20, 0.99));
+  box-shadow:
+    0 0 80px rgba(0, 0, 0, 0.82),
+    inset 0 0 24px rgba(56, 189, 248, 0.05);
+}
+
+.map-modal-header {
+  flex: 0 0 48px;
+  height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(84, 139, 184, 0.2);
+  background: rgba(10, 22, 36, 0.96);
+}
+
+.map-modal-header h2 {
+  margin: 0;
+  color: #e8f3ff;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+}
+
+.map-modal-header span {
+  display: block;
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.map-modal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.map-modal-header-right .map-risk-badge {
+  margin-top: 0;
+}
+
+.map-modal-close {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  border-radius: 7px;
+  background: rgba(56, 189, 248, 0.08);
+  color: var(--text);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.map-modal-close:hover {
+  filter: brightness(1.18);
+}
+
+.map-modal-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.real-map-shell.expanded {
+  height: 100%;
+  min-height: 100%;
+}
+
+.real-map-shell.expanded .map-legend.real {
+  left: 18px;
+  top: 18px;
+  width: 170px;
+  gap: 9px;
+  padding: 12px;
+  font-size: 10px;
+}
+
+.real-map-shell.expanded .geo-marker {
+  font-size: 12px;
+  padding: 8px 11px;
+}
+
+.real-map-shell.expanded .geo-marker.sector {
+  width: 150px;
+  height: 92px;
+  font-size: 13px;
+}
+
+.real-map-shell.expanded .maplibregl-ctrl-top-right {
+  top: 12px;
+  right: 12px;
+}
+
+.map-layer-readout {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 7;
+  display: flex;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(84, 139, 184, 0.24);
+  border-radius: 999px;
+  background: rgba(4, 10, 18, 0.76);
+  backdrop-filter: blur(5px);
+  box-shadow: 0 0 22px rgba(0, 0, 0, 0.45);
+}
+
+.map-layer-readout span {
+  color: var(--muted);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  font-weight: 800;
+}
+
+.map-layer-readout span.active {
+  color: var(--blue);
+}
+
+.map-layer-readout span.warning {
+  color: var(--orange);
+}
+
+.map-layer-readout span.cyan {
+  color: var(--cyan);
+}
+
+.map-layer-readout span.danger {
+  color: var(--red);
+}
+
+/* Keep modal usable on shorter screens */
+@media (max-height: 760px) {
+  .map-modal {
+    height: 94vh;
+  }
+
+  .map-modal-header {
+    flex-basis: 44px;
+    height: 44px;
+  }
+
+  .real-map-shell.expanded .map-legend.real {
+    width: 150px;
+    gap: 7px;
+    padding: 10px;
+    font-size: 9px;
+  }
+}
+
+/* Mobile/narrow fallback */
+@media (max-width: 760px) {
+  .map-modal-backdrop {
+    padding: 10px;
+  }
+
+  .map-modal {
+    width: 96vw;
+    height: 92vh;
+  }
+
+  .map-modal-header {
+    height: auto;
+    min-height: 58px;
+    padding: 10px 12px;
+  }
+
+  .map-modal-header h2 {
+    font-size: 12px;
+  }
+
+  .map-modal-header span {
+    font-size: 9px;
+  }
+
+  .map-layer-readout {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    justify-content: center;
+  }
+}

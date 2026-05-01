@@ -1,5 +1,5 @@
 // components/MapView.tsx
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import maplibregl from "maplibre-gl";
 import type { FeatureCollection, LineString, Polygon } from "geojson";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -43,19 +43,28 @@ const DARK_RASTER_STYLE: any = {
   ],
 };
 
-export default function MapView({ map }: any) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
-  const markerRefs = useRef<maplibregl.Marker[]>([]);
-  const mapLoadedRef = useRef(false);
+type MapViewProps = {
+  map: any;
+};
+
+type MapCanvasProps = {
+  hasDrone: boolean;
+  hasVessel: boolean;
+  isElevated: boolean;
+  expanded?: boolean;
+};
+
+export default function MapView({ map }: MapViewProps) {
+  const [expanded, setExpanded] = useState(false);
 
   const tracks = map?.tracks || [];
   const threatPaths = map?.threat_paths || [];
-  const riskLevel = map?.risk_level || "normal";
+  const riskLevel = map?.risk_level || map?.risk || "normal";
 
   const hasDrone = useMemo(() => {
     return (
       tracks.some((track: any) => track.kind === "physical.drone") ||
+      tracks.some((track: any) => String(track.kind || "").includes("drone")) ||
       threatPaths.some((path: any) => path.kind === "physical_path")
     );
   }, [tracks, threatPaths]);
@@ -63,11 +72,108 @@ export default function MapView({ map }: any) {
   const hasVessel = useMemo(() => {
     return (
       tracks.some((track: any) => track.kind === "osint.ais_anomaly") ||
+      tracks.some((track: any) => String(track.kind || "").includes("ais")) ||
+      tracks.some((track: any) => String(track.kind || "").includes("vessel")) ||
       threatPaths.some((path: any) => path.kind === "osint_path")
     );
   }, [tracks, threatPaths]);
 
   const isElevated = ["medium", "high", "critical"].includes(riskLevel);
+
+  return (
+    <>
+      <div
+        className={`panel map-panel risk-${riskLevel} map-panel-clickable`}
+        role="button"
+        tabIndex={0}
+        onClick={() => setExpanded(true)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setExpanded(true);
+          }
+        }}
+      >
+        <div className="panel-header">
+          <h2>OPERATIONAL VIEW</h2>
+          <span className={`map-risk-badge ${riskLevel}`}>
+            RISK: {String(riskLevel).toUpperCase()}
+          </span>
+        </div>
+
+        <div className="real-map-shell">
+          <MapCanvas
+            hasDrone={hasDrone}
+            hasVessel={hasVessel}
+            isElevated={isElevated}
+          />
+
+          <MapOverlays />
+          <div className="map-expand-hint">CLICK TO EXPAND</div>
+        </div>
+      </div>
+
+      {expanded && (
+        <div className="map-modal-backdrop" onClick={() => setExpanded(false)}>
+          <div className="map-modal" onClick={(event) => event.stopPropagation()}>
+            <div className="map-modal-header">
+              <div>
+                <h2>EXPANDED OPERATIONAL VIEW</h2>
+                <span>Live cyber / physical / OSINT mission picture</span>
+              </div>
+
+              <div className="map-modal-header-right">
+                <span className={`map-risk-badge ${riskLevel}`}>
+                  RISK: {String(riskLevel).toUpperCase()}
+                </span>
+
+                <button
+                  type="button"
+                  className="map-modal-close"
+                  onClick={() => setExpanded(false)}
+                  aria-label="Close expanded operational view"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+
+            <div className="map-modal-body">
+              <div className="real-map-shell expanded">
+                <MapCanvas
+                  hasDrone={hasDrone}
+                  hasVessel={hasVessel}
+                  isElevated={isElevated}
+                  expanded
+                />
+
+                <MapOverlays />
+
+                <div className="map-layer-readout">
+                  <span className="active">CYBER</span>
+                  <span className={hasDrone ? "active warning" : ""}>UAS</span>
+                  <span className={hasVessel ? "active cyan" : ""}>AIS</span>
+                  <span className={isElevated ? "active danger" : ""}>FUSION</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+function MapCanvas({
+  hasDrone,
+  hasVessel,
+  isElevated,
+  expanded = false,
+}: MapCanvasProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<maplibregl.Map | null>(null);
+  const markerRefs = useRef<maplibregl.Marker[]>([]);
+  const mapLoadedRef = useRef(false);
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -75,12 +181,17 @@ export default function MapView({ map }: any) {
     const instance = new maplibregl.Map({
       container: containerRef.current,
       style: DARK_RASTER_STYLE,
-      center: [-122.39, 37.79],
-      zoom: 10.4,
-      pitch: 38,
+      center: expanded ? [-122.38, 37.795] : [-122.39, 37.79],
+      zoom: expanded ? 11.15 : 10.4,
+      pitch: expanded ? 44 : 38,
       bearing: -18,
       attributionControl: false,
       dragRotate: false,
+      scrollZoom: expanded,
+      dragPan: expanded,
+      keyboard: expanded,
+      doubleClickZoom: expanded,
+      touchZoomRotate: expanded,
     });
 
     instance.addControl(
@@ -115,6 +226,10 @@ export default function MapView({ map }: any) {
         hasVessel,
         isElevated,
       });
+
+      window.setTimeout(() => {
+        instance.resize();
+      }, 50);
     });
 
     mapRef.current = instance;
@@ -127,7 +242,7 @@ export default function MapView({ map }: any) {
       instance.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [expanded]);
 
   useEffect(() => {
     const instance = mapRef.current;
@@ -149,42 +264,35 @@ export default function MapView({ map }: any) {
       hasVessel,
       isElevated,
     });
-  }, [hasDrone, hasVessel, isElevated, riskLevel]);
+  }, [hasDrone, hasVessel, isElevated]);
 
+  return <div ref={containerRef} className="real-map" />;
+}
+
+function MapOverlays() {
   return (
-    <div className={`panel map-panel risk-${riskLevel}`}>
-      <div className="panel-header">
-        <h2>OPERATIONAL VIEW</h2>
-        <span className={`map-risk-badge ${riskLevel}`}>
-          RISK: {riskLevel.toUpperCase()}
+    <>
+      <div className="map-vignette" />
+      <div className="map-scan-overlay" />
+
+      <div className="map-legend real">
+        <span>
+          <b className="blue" /> FRIENDLY ASSET
+        </span>
+        <span>
+          <b className="red" /> THREAT
+        </span>
+        <span>
+          <b className="gray" /> NEUTRAL
+        </span>
+        <span>
+          <b className="orange-line" /> UAS TRACK
+        </span>
+        <span>
+          <b className="cyan-line" /> VESSEL TRACK
         </span>
       </div>
-
-      <div className="real-map-shell">
-        <div ref={containerRef} className="real-map" />
-
-        <div className="map-vignette" />
-        <div className="map-scan-overlay" />
-
-        <div className="map-legend real">
-          <span>
-            <b className="blue" /> FRIENDLY ASSET
-          </span>
-          <span>
-            <b className="red" /> THREAT
-          </span>
-          <span>
-            <b className="gray" /> NEUTRAL
-          </span>
-          <span>
-            <b className="orange-line" /> UAS TRACK
-          </span>
-          <span>
-            <b className="cyan-line" /> VESSEL TRACK
-          </span>
-        </div>
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -345,9 +453,7 @@ function buildMarkers(args: {
 
   if (hasDrone) {
     markers.push(
-      makeMarker("threat active", "◉", "UAS")
-        .setLngLat(SECTOR_B)
-        .addTo(instance)
+      makeMarker("threat active", "◉", "UAS").setLngLat(SECTOR_B).addTo(instance)
     );
   }
 
