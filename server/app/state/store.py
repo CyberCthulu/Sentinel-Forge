@@ -5,6 +5,13 @@ from copy import deepcopy
 from typing import Any, Optional
 
 
+DEFAULT_SCENARIO = {
+    "id": "coordinated_intrusion",
+    "name": "Coordinated Intrusion",
+    "description": "Cyber, physical, and OSINT indicators converge into a coordinated intrusion pattern.",
+}
+
+
 def build_empty_correlation() -> dict[str, Any]:
     return {
         "confidence": 0,
@@ -26,20 +33,7 @@ def build_empty_correlation() -> dict[str, Any]:
     }
 
 
-def build_initial_state() -> dict[str, Any]:
-    """
-    Canonical API state shape.
-
-    The pipeline owns:
-    - events
-    - signals
-    - correlation
-    - incident
-    - map_state
-
-    The operator analyst route owns:
-    - agent
-    """
+def build_initial_state(scenario: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     return {
         "events": [],
         "signals": [],
@@ -52,6 +46,7 @@ def build_initial_state() -> dict[str, Any]:
             "zones": [],
             "threat_paths": [],
         },
+        "scenario": scenario or DEFAULT_SCENARIO,
         "meta": {
             "mode": "demo",
             "step": 0,
@@ -61,18 +56,11 @@ def build_initial_state() -> dict[str, Any]:
 
 
 class StateStore:
-    """
-    In-memory state store.
-
-    For the hackathon demo, this is enough.
-    Later this could be swapped for Redis, Postgres, or an event bus.
-    """
-
     def __init__(self):
         self._state = build_initial_state()
 
-    def reset(self) -> dict[str, Any]:
-        self._state = build_initial_state()
+    def reset(self, scenario: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+        self._state = build_initial_state(scenario=scenario)
         return self.get()
 
     def get(self) -> dict[str, Any]:
