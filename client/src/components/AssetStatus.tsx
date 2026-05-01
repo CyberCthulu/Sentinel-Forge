@@ -5,6 +5,7 @@ type AssetStatusValue =
   | "streaming"
   | "live"
   | "standby"
+  | "suspect"
   | "alerting"
   | "active"
   | "degraded"
@@ -79,14 +80,22 @@ export default function AssetStatus({ assets }: Props) {
       status === "streaming" ||
       status === "active" ||
       status === "live" ||
+      status === "suspect" ||
       status === "alerting"
     );
   }).length;
 
+  const alertCount = displayAssets.filter((asset) => {
+    const status = normalizeStatus(asset.status);
+    return status === "alerting" || status === "suspect";
+  }).length;
+
   const headerText =
-    liveCount > 0
-      ? `${liveCount}/${displayAssets.length} LIVE`
-      : `${displayAssets.length} MONITORED`;
+    alertCount > 0
+      ? `${alertCount} ATTENTION`
+      : liveCount > 0
+        ? `${liveCount}/${displayAssets.length} LIVE`
+        : `${displayAssets.length} MONITORED`;
 
   return (
     <div className="panel asset-panel">
@@ -123,6 +132,7 @@ function normalizeStatus(status: string) {
   if (normalized === "live") return "live";
   if (normalized === "streaming") return "streaming";
   if (normalized === "standby") return "standby";
+  if (normalized === "suspect") return "suspect";
   if (normalized === "active") return "active";
   if (normalized === "alerting") return "alerting";
   if (normalized === "degraded") return "degraded";

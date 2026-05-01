@@ -28,23 +28,23 @@ def build_map_state(events: list[dict[str, Any]], signals=None) -> dict[str, Any
 def build_tracks(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
     tracks = []
 
-    for e in events:
-        geo = e.get("geospatial")
+    for event in events:
+        geo = event.get("geospatial")
 
         if not geo:
             continue
 
         tracks.append(
             {
-                "id": e["id"],
-                "kind": e["type"],
+                "id": event["id"],
+                "kind": event["type"],
                 "lat": geo["lat"],
                 "lon": geo["lon"],
                 "alt": geo.get("alt"),
-                "confidence": confidence_for_track(e),
-                "source": e.get("source"),
-                "timestamp": e.get("timestamp"),
-                "label": label_for_track(e),
+                "confidence": confidence_for_track(event),
+                "source": event.get("source"),
+                "timestamp": event.get("timestamp"),
+                "label": label_for_track(event),
             }
         )
 
@@ -55,8 +55,12 @@ def build_assets(signal_kinds: set[str], event_types: set[str]) -> list[dict[str
     """
     Asset/adaptor status model.
 
-    If any event has entered the pipeline, the mock sensor/adapter layer is treated
-    as live. Threat signals then override the normal live state into ALERTING.
+    Important semantics:
+    - STREAMING: adapter/feed is live and ingesting.
+    - ACTIVE: physical/OSINT sensor is live and monitoring.
+    - SUSPECT: asset/account path is involved in suspicious behavior.
+    - ALERTING: monitoring system raised an alert condition.
+    - LIVE: fusion core is running.
     """
     system_live = len(event_types) > 0
 
@@ -64,58 +68,66 @@ def build_assets(signal_kinds: set[str], event_types: set[str]) -> list[dict[str
     physical_status = "active" if system_live else "operational"
     osint_status = "active" if system_live else "operational"
 
+    auth_status = cyber_status
+    if has_auth_threat(signal_kinds):
+      auth_status = "suspect"
+
+    edr_status = cyber_status
+    if (
+        "network.lateral_movement" in signal_kinds
+        or "identity.privilege_escalation" in signal_kinds
+    ):
+        edr_status = "alerting"
+
+    network_status = cyber_status
+    if "network.data_exfiltration" in signal_kinds:
+        network_status = "alerting"
+    elif "network.lateral_movement" in signal_kinds:
+        network_status = "suspect"
+
+    uas_status = physical_status
+    if "physical.drone_recon" in signal_kinds:
+        uas_status = "alerting"
+
+    ais_status = osint_status
+    if "osint.ais_anomaly" in signal_kinds:
+        ais_status = "alerting"
+
     return [
         {
             "id": "asset-auth-gw-01",
             "name": "AUTH SERVER",
             "kind": "auth_gateway",
             "domain": "cyber",
-            "status": "alerting" if has_auth_threat(signal_kinds) else cyber_status,
+            "status": auth_status,
         },
         {
             "id": "asset-edr-network",
             "name": "EDR SENSOR NETWORK",
             "kind": "endpoint_detection",
             "domain": "cyber",
-            "status": (
-                "alerting"
-                if "network.lateral_movement" in signal_kinds
-                or "identity.privilege_escalation" in signal_kinds
-                else cyber_status
-            ),
+            "status": edr_status,
         },
         {
             "id": "asset-network-gateway",
             "name": "NETWORK GATEWAY",
             "kind": "network_gateway",
             "domain": "cyber",
-            "status": (
-                "alerting"
-                if "network.data_exfiltration" in signal_kinds
-                else cyber_status
-            ),
+            "status": network_status,
         },
         {
             "id": "asset-uas-monitoring",
             "name": "UAS MONITORING",
             "kind": "uas_sensor",
             "domain": "physical",
-            "status": (
-                "alerting"
-                if "physical.drone_recon" in signal_kinds
-                else physical_status
-            ),
+            "status": uas_status,
         },
         {
             "id": "asset-ais-monitoring",
             "name": "AIS MONITORING",
             "kind": "ais_feed",
             "domain": "osint",
-            "status": (
-                "alerting"
-                if "osint.ais_anomaly" in signal_kinds
-                else osint_status
-            ),
+            "status": ais_status,
         },
         {
             "id": "asset-fusion-core",

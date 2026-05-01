@@ -1,5 +1,9 @@
 /* styles/map.css */
 
+/* =========================================================
+   Operational View Panel
+========================================================= */
+
 .map-panel {
   display: flex;
   flex-direction: column;
@@ -12,18 +16,22 @@
   color: var(--muted);
 }
 
-.map-risk-badge.high,
-.map-risk-badge.critical {
-  color: var(--red);
+.map-risk-badge.low {
+  color: var(--green);
 }
 
 .map-risk-badge.medium {
   color: var(--yellow);
 }
 
-.map-risk-badge.low {
-  color: var(--green);
+.map-risk-badge.high,
+.map-risk-badge.critical {
+  color: var(--red);
 }
+
+/* =========================================================
+   Map Shell / MapLibre
+========================================================= */
 
 .real-map-shell {
   position: relative;
@@ -51,14 +59,27 @@
   transform-origin: bottom right;
 }
 
+.maplibregl-ctrl-group {
+  background: rgba(4, 10, 18, 0.74) !important;
+  border: 1px solid rgba(84, 139, 184, 0.25) !important;
+}
+
+.maplibregl-ctrl button {
+  filter: invert(1) hue-rotate(170deg);
+}
+
+/* =========================================================
+   Map Visual Overlays
+========================================================= */
+
 .map-vignette {
   position: absolute;
   inset: 0;
+  z-index: 2;
   pointer-events: none;
   background:
     radial-gradient(circle at center, transparent 0 45%, rgba(0, 0, 0, 0.48) 100%),
     linear-gradient(180deg, rgba(5, 12, 20, 0.2), rgba(5, 12, 20, 0.48));
-  z-index: 2;
 }
 
 .map-scan-overlay {
@@ -66,6 +87,7 @@
   inset: -30% 0;
   z-index: 3;
   pointer-events: none;
+  opacity: 0.65;
   background:
     linear-gradient(
       115deg,
@@ -76,7 +98,6 @@
       transparent 56% 100%
     );
   animation: mapSweep 8s linear infinite;
-  opacity: 0.65;
 }
 
 @keyframes mapSweep {
@@ -89,23 +110,25 @@
   }
 }
 
-/* Legend */
+/* =========================================================
+   Map Legend
+========================================================= */
 
 .map-legend.real {
   position: absolute;
   left: 14px;
   top: 14px;
+  z-index: 5;
   width: 148px;
   display: grid;
   gap: 7px;
-  background: rgba(4, 10, 18, 0.78);
+  padding: 9px;
   border: 1px solid rgba(84, 139, 184, 0.25);
   border-radius: 6px;
-  padding: 9px;
-  font-size: 9px;
-  z-index: 5;
+  background: rgba(4, 10, 18, 0.78);
   box-shadow: 0 0 18px rgba(0, 0, 0, 0.42);
   backdrop-filter: blur(5px);
+  font-size: 9px;
 }
 
 .map-legend span {
@@ -117,8 +140,8 @@
 .map-legend b {
   width: 10px;
   height: 10px;
-  border-radius: 999px;
   display: inline-block;
+  border-radius: 999px;
 }
 
 .blue {
@@ -134,18 +157,20 @@
 }
 
 .orange-line {
-  background: var(--orange);
   height: 3px !important;
   border-radius: 0 !important;
+  background: var(--orange);
 }
 
 .cyan-line {
-  background: var(--cyan);
   height: 3px !important;
   border-radius: 0 !important;
+  background: var(--cyan);
 }
 
-/* Geo markers */
+/* =========================================================
+   Geo Markers
+========================================================= */
 
 .geo-marker {
   position: relative;
@@ -156,12 +181,12 @@
   white-space: nowrap;
   border-radius: 6px;
   padding: 7px 9px;
+  background: rgba(4, 10, 18, 0.82);
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(5px);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
-  background: rgba(4, 10, 18, 0.82);
-  backdrop-filter: blur(5px);
-  box-shadow: 0 0 18px rgba(0, 0, 0, 0.48);
 }
 
 .geo-marker.friendly {
@@ -236,18 +261,9 @@
   }
 }
 
-/* MapLibre control polish */
-
-.maplibregl-ctrl-group {
-  background: rgba(4, 10, 18, 0.74) !important;
-  border: 1px solid rgba(84, 139, 184, 0.25) !important;
-}
-
-.maplibregl-ctrl button {
-  filter: invert(1) hue-rotate(170deg);
-}
-
-/* Asset Status panel */
+/* =========================================================
+   Asset Status Panel
+========================================================= */
 
 .asset-panel {
   display: flex;
@@ -274,78 +290,126 @@
   overflow-y: auto;
 }
 
-.asset-row,
-.asset-list div {
+.asset-row {
   flex: 0 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
-  border-bottom: 1px solid rgba(84, 139, 184, 0.12);
+  min-height: 34px;
   padding: 7px 0;
+  border-bottom: 1px solid rgba(84, 139, 184, 0.12);
   font-size: 10.5px;
 }
 
-.asset-row span,
-.asset-list span {
+.asset-row span {
+  min-width: 0;
   color: #dbeafe;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.asset-row strong,
-.asset-list strong {
+.asset-row strong {
+  flex: 0 0 auto;
   white-space: nowrap;
   font-size: 9.5px;
   letter-spacing: 0.05em;
 }
 
-.asset-row strong.operational,
-.asset-list strong.operational {
+/* Asset status text colors */
+
+.asset-row strong.operational {
   color: var(--green);
 }
 
-.asset-row strong.active,
-.asset-list strong.active {
+.asset-row strong.streaming {
+  color: var(--blue);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.32);
+}
+
+.asset-row strong.live {
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.asset-row strong.active {
   color: var(--orange);
-  text-shadow: 0 0 10px rgba(251, 146, 60, 0.32);
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.28);
 }
 
-.asset-row strong.alerting,
-.asset-list strong.alerting {
+.asset-row strong.suspect {
+  color: var(--yellow);
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.32);
+}
+
+.asset-row strong.alerting {
   color: var(--red);
-  text-shadow: 0 0 10px rgba(255, 64, 64, 0.34);
+  text-shadow: 0 0 12px rgba(255, 64, 64, 0.42);
 }
 
-.asset-row strong.degraded,
-.asset-list strong.degraded {
+.asset-row strong.degraded {
   color: var(--yellow);
 }
 
+.asset-row strong.standby,
 .asset-row strong.offline,
-.asset-list strong.offline,
-.asset-row strong.unknown,
-.asset-list strong.unknown {
+.asset-row strong.unknown {
   color: var(--muted);
 }
 
-.asset-row.active,
-.asset-row.alerting {
+/* Asset row state backgrounds */
+
+.asset-row.streaming,
+.asset-row.live {
   background:
     linear-gradient(
       90deg,
-      rgba(255, 64, 64, 0.055),
+      rgba(56, 189, 248, 0.055),
       transparent 45%
     );
 }
 
 .asset-row.active {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(251, 146, 60, 0.045),
+      transparent 45%
+    );
   border-bottom-color: rgba(251, 146, 60, 0.2);
 }
 
+.asset-row.suspect {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(251, 191, 36, 0.06),
+      transparent 48%
+    );
+  border-bottom-color: rgba(251, 191, 36, 0.22);
+}
+
 .asset-row.alerting {
-  border-bottom-color: rgba(255, 64, 64, 0.22);
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 64, 64, 0.07),
+      transparent 48%
+    );
+  border-bottom-color: rgba(255, 64, 64, 0.24);
+}
+
+.asset-row.live {
+  border-bottom-color: rgba(34, 197, 94, 0.22);
+}
+
+.asset-row.streaming {
+  border-bottom-color: rgba(56, 189, 248, 0.2);
+}
+
+.asset-row.standby {
+  opacity: 0.72;
 }
 
 /* =========================================================
@@ -519,15 +583,15 @@
   border: 1px solid rgba(84, 139, 184, 0.24);
   border-radius: 999px;
   background: rgba(4, 10, 18, 0.76);
-  backdrop-filter: blur(5px);
   box-shadow: 0 0 22px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(5px);
 }
 
 .map-layer-readout span {
   color: var(--muted);
   font-size: 10px;
-  letter-spacing: 0.08em;
   font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
 .map-layer-readout span.active {
@@ -546,7 +610,10 @@
   color: var(--red);
 }
 
-/* Keep modal usable on shorter screens */
+/* =========================================================
+   Responsive Modal Adjustments
+========================================================= */
+
 @media (max-height: 760px) {
   .map-modal {
     height: 94vh;
@@ -565,7 +632,6 @@
   }
 }
 
-/* Mobile/narrow fallback */
 @media (max-width: 760px) {
   .map-modal-backdrop {
     padding: 10px;
@@ -596,47 +662,4 @@
     bottom: 12px;
     justify-content: center;
   }
-}
-
-/* =========================================================
-   Asset Status: Live Adapter States
-========================================================= */
-
-.asset-row strong.streaming,
-.asset-list strong.streaming {
-  color: var(--blue);
-  text-shadow: 0 0 10px rgba(56, 189, 248, 0.32);
-}
-
-.asset-row strong.live,
-.asset-list strong.live {
-  color: var(--green);
-  text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
-}
-
-.asset-row strong.standby,
-.asset-list strong.standby {
-  color: var(--muted);
-}
-
-.asset-row.streaming,
-.asset-row.live {
-  background:
-    linear-gradient(
-      90deg,
-      rgba(56, 189, 248, 0.055),
-      transparent 45%
-    );
-}
-
-.asset-row.live {
-  border-bottom-color: rgba(34, 197, 94, 0.22);
-}
-
-.asset-row.streaming {
-  border-bottom-color: rgba(56, 189, 248, 0.2);
-}
-
-.asset-row.standby {
-  opacity: 0.72;
 }
