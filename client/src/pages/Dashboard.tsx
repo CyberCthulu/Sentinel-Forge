@@ -1,3 +1,4 @@
+// pages/Dashboard.tsx
 import { useState } from "react";
 
 import TopBar from "../components/TopBar";
@@ -19,9 +20,12 @@ type FocusedSignal = {
 export default function Dashboard() {
   const {
     state,
+    scenarios,
+    selectedScenarioId,
     step,
     reset,
     toggleRun,
+    changeScenario,
     isAutoRunning,
     isSystemRunning,
     isBusy,
@@ -29,15 +33,28 @@ export default function Dashboard() {
 
   const [focusedSignal, setFocusedSignal] = useState<FocusedSignal>(null);
 
+  const handleScenarioChange = async (scenarioId: string) => {
+    setFocusedSignal(null);
+    await changeScenario(scenarioId);
+  };
+
+  const handleReset = async () => {
+    setFocusedSignal(null);
+    await reset();
+  };
+
   return (
     <div className="dashboard-shell">
       <TopBar
         onRunToggle={toggleRun}
         onStep={step}
-        onReset={reset}
+        onReset={handleReset}
         isAutoRunning={isAutoRunning}
         isSystemRunning={isSystemRunning}
         isBusy={isBusy}
+        scenarios={scenarios}
+        selectedScenarioId={selectedScenarioId}
+        onScenarioChange={handleScenarioChange}
       />
 
       <main className="dashboard-grid">

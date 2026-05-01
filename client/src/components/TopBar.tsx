@@ -4,6 +4,12 @@ import "../styles/topbar.css";
 
 type MaybePromise<T = void> = T | Promise<T>;
 
+export type ScenarioOption = {
+  id: string;
+  name: string;
+  description?: string;
+};
+
 type Props = {
   onRunToggle: () => MaybePromise;
   onStep: () => MaybePromise;
@@ -11,7 +17,32 @@ type Props = {
   isAutoRunning: boolean;
   isSystemRunning: boolean;
   isBusy?: boolean;
+
+  scenarios?: ScenarioOption[];
+  selectedScenarioId?: string;
+  onScenarioChange?: (scenarioId: string) => MaybePromise;
 };
+
+const FALLBACK_SCENARIOS: ScenarioOption[] = [
+  {
+    id: "coordinated_intrusion",
+    name: "Coordinated Intrusion",
+    description:
+      "Cyber, physical, and OSINT indicators converge into a coordinated intrusion pattern.",
+  },
+  {
+    id: "cyber_breach",
+    name: "Cyber-Only Breach",
+    description:
+      "Unauthorized access escalates into lateral movement, privilege escalation, and exfiltration.",
+  },
+  {
+    id: "physical_perimeter",
+    name: "Physical Perimeter Threat",
+    description:
+      "Drone and maritime anomalies indicate a developing perimeter threat.",
+  },
+];
 
 export default function TopBar({
   onRunToggle,
@@ -20,6 +51,9 @@ export default function TopBar({
   isAutoRunning,
   isSystemRunning,
   isBusy = false,
+  scenarios = FALLBACK_SCENARIOS,
+  selectedScenarioId = "coordinated_intrusion",
+  onScenarioChange,
 }: Props) {
   const [now, setNow] = useState(() => new Date());
   const [startedAt, setStartedAt] = useState(() => Date.now());
@@ -45,6 +79,14 @@ export default function TopBar({
     return now.toISOString().slice(0, 10).toUpperCase();
   }, [now]);
 
+  const selectedScenario = useMemo(() => {
+    return (
+      scenarios.find((scenario) => scenario.id === selectedScenarioId) ||
+      scenarios[0] ||
+      FALLBACK_SCENARIOS[0]
+    );
+  }, [scenarios, selectedScenarioId]);
+
   const handleRunToggle = async () => {
     if (!isAutoRunning) {
       setStartedAt(Date.now());
@@ -60,6 +102,18 @@ export default function TopBar({
   const handleReset = async () => {
     setStartedAt(Date.now());
     await onReset();
+  };
+
+  const handleScenarioChange = async (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const nextScenarioId = event.target.value;
+
+    setStartedAt(Date.now());
+
+    if (onScenarioChange) {
+      await onScenarioChange(nextScenarioId);
+    }
   };
 
   return (
@@ -110,7 +164,20 @@ export default function TopBar({
 
       <div className="scenario-box">
         <span>SCENARIO</span>
-        <strong>Coordinated Intrusion</strong>
+
+        <select
+          className="scenario-select"
+          value={selectedScenario.id}
+          onChange={handleScenarioChange}
+          disabled={isBusy || isAutoRunning}
+          title={selectedScenario.description || selectedScenario.name}
+        >
+          {scenarios.map((scenario) => (
+            <option key={scenario.id} value={scenario.id}>
+              {scenario.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="time-box">
