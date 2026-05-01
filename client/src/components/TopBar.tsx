@@ -3,12 +3,22 @@ import { useEffect, useMemo, useState } from "react";
 import "../styles/topbar.css";
 
 type Props = {
-  onStart: () => void;
+  onRunToggle: () => void;
   onStep: () => void;
   onReset: () => void;
+  isAutoRunning: boolean;
+  isSystemRunning: boolean;
+  isBusy?: boolean;
 };
 
-export default function TopBar({ onStart, onStep, onReset }: Props) {
+export default function TopBar({
+  onRunToggle,
+  onStep,
+  onReset,
+  isAutoRunning,
+  isSystemRunning,
+  isBusy = false,
+}: Props) {
   const [now, setNow] = useState(() => new Date());
   const [startedAt, setStartedAt] = useState(() => Date.now());
 
@@ -30,15 +40,15 @@ export default function TopBar({ onStart, onStep, onReset }: Props) {
   }, [now]);
 
   const utcDate = useMemo(() => {
-    return now
-      .toISOString()
-      .slice(0, 10)
-      .toUpperCase();
+    return now.toISOString().slice(0, 10).toUpperCase();
   }, [now]);
 
-  const handleStart = () => {
-    setStartedAt(Date.now());
-    onStart();
+  const handleRunToggle = () => {
+    if (!isAutoRunning) {
+      setStartedAt(Date.now());
+    }
+
+    onRunToggle();
   };
 
   const handleReset = () => {
@@ -58,22 +68,34 @@ export default function TopBar({ onStart, onStep, onReset }: Props) {
       </div>
 
       <div className="topbar-controls">
-        <button className="control-btn start" onClick={handleStart}>
-          ▶ START
+        <button
+          className={`control-btn start ${isAutoRunning ? "active" : ""}`}
+          onClick={handleRunToggle}
+          disabled={isBusy && !isAutoRunning}
+        >
+          {isAutoRunning ? "Ⅱ PAUSE" : "▶ START"}
         </button>
 
-        <button className="control-btn" onClick={onStep}>
+        <button
+          className="control-btn"
+          onClick={onStep}
+          disabled={isBusy || isAutoRunning}
+        >
           » STEP
         </button>
 
-        <button className="control-btn" onClick={handleReset}>
+        <button
+          className="control-btn"
+          onClick={handleReset}
+          disabled={isBusy}
+        >
           ↻ RESET
         </button>
       </div>
 
       <div className="runtime-status">
-        <span className="live-dot" />
-        <strong>LIVE</strong>
+        <span className={`live-dot ${isSystemRunning ? "active" : ""}`} />
+        <strong>{isSystemRunning ? "LIVE" : "READY"}</strong>
         <span className="runtime-clock">{runtime}</span>
       </div>
 

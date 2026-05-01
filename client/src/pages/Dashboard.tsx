@@ -9,11 +9,26 @@ import AssetStatus from "../components/AssetStatus";
 import { useSimulation } from "../hooks/useSimulation";
 
 export default function Dashboard() {
-  const { state, start, step, reset } = useSimulation();
+  const {
+    state,
+    step,
+    reset,
+    toggleRun,
+    isAutoRunning,
+    isSystemRunning,
+    isBusy,
+  } = useSimulation();
 
   return (
     <div className="dashboard-shell">
-      <TopBar onStart={start} onStep={step} onReset={reset} />
+      <TopBar
+        onRunToggle={toggleRun}
+        onStep={step}
+        onReset={reset}
+        isAutoRunning={isAutoRunning}
+        isSystemRunning={isSystemRunning}
+        isBusy={isBusy}
+      />
 
       <main className="dashboard-grid">
         <section className="dashboard-area event-area">
