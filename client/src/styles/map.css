@@ -8,6 +8,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  position: relative;
 }
 
 .map-risk-badge {
@@ -27,6 +28,7 @@
 .map-risk-badge.high,
 .map-risk-badge.critical {
   color: var(--red);
+  text-shadow: 0 0 12px rgba(255, 64, 64, 0.32);
 }
 
 /* =========================================================
@@ -62,6 +64,7 @@
 .maplibregl-ctrl-group {
   background: rgba(4, 10, 18, 0.74) !important;
   border: 1px solid rgba(84, 139, 184, 0.25) !important;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.45) !important;
 }
 
 .maplibregl-ctrl button {
@@ -87,17 +90,59 @@
   inset: -30% 0;
   z-index: 3;
   pointer-events: none;
-  opacity: 0.65;
+  opacity: 0.58;
   background:
     linear-gradient(
       115deg,
       transparent 0 44%,
-      rgba(34, 211, 238, 0.06) 48%,
-      rgba(34, 211, 238, 0.14) 50%,
-      rgba(251, 146, 60, 0.06) 52%,
+      rgba(34, 211, 238, 0.05) 48%,
+      rgba(34, 211, 238, 0.12) 50%,
+      rgba(251, 146, 60, 0.05) 52%,
       transparent 56% 100%
     );
   animation: mapSweep 8s linear infinite;
+}
+
+/* Tactical grid / mission-picture overlay */
+.real-map-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background:
+    linear-gradient(rgba(56, 189, 248, 0.026) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 189, 248, 0.022) 1px, transparent 1px),
+    radial-gradient(circle at 58% 48%, rgba(255, 64, 64, 0.1), transparent 21%),
+    radial-gradient(circle at 42% 58%, rgba(34, 211, 238, 0.065), transparent 24%);
+  background-size:
+    64px 64px,
+    64px 64px,
+    auto,
+    auto;
+  mix-blend-mode: screen;
+  opacity: 0.38;
+}
+
+/* Subtle expanded-map scanline */
+.real-map-shell.expanded::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -22%;
+  height: 16%;
+  z-index: 8;
+  pointer-events: none;
+  background:
+    linear-gradient(
+      180deg,
+      transparent,
+      rgba(56, 189, 248, 0.05),
+      transparent
+    );
+  opacity: 0.72;
+  animation: operationalScan 5.8s linear infinite;
 }
 
 @keyframes mapSweep {
@@ -110,6 +155,16 @@
   }
 }
 
+@keyframes operationalScan {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(720%);
+  }
+}
+
 /* =========================================================
    Map Legend
 ========================================================= */
@@ -118,7 +173,7 @@
   position: absolute;
   left: 14px;
   top: 14px;
-  z-index: 5;
+  z-index: 9;
   width: 148px;
   display: grid;
   gap: 7px;
@@ -127,7 +182,8 @@
   border-radius: 6px;
   background: rgba(4, 10, 18, 0.78);
   box-shadow: 0 0 18px rgba(0, 0, 0, 0.42);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
   font-size: 9px;
 }
 
@@ -183,7 +239,9 @@
   padding: 7px 9px;
   background: rgba(4, 10, 18, 0.82);
   box-shadow: 0 0 18px rgba(0, 0, 0, 0.48);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
+  text-shadow: 0 0 8px rgba(0, 0, 0, 0.82);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -191,8 +249,16 @@
 
 .geo-marker.friendly {
   color: #bdeeff;
-  border: 1px solid rgba(56, 189, 248, 0.48);
-  background: rgba(56, 189, 248, 0.14);
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(14, 165, 233, 0.24),
+      rgba(8, 47, 73, 0.32)
+    );
+  box-shadow:
+    0 0 14px rgba(56, 189, 248, 0.18),
+    inset 0 0 12px rgba(56, 189, 248, 0.08);
 }
 
 .geo-marker.friendly .geo-marker-icon {
@@ -206,7 +272,7 @@
   color: #ffb4b4;
   border: 1px solid rgba(255, 64, 64, 0.82);
   background:
-    radial-gradient(circle at center, rgba(255, 64, 64, 0.24), rgba(255, 64, 64, 0.08));
+    radial-gradient(circle at center, rgba(255, 64, 64, 0.26), rgba(255, 64, 64, 0.08));
   box-shadow:
     inset 0 0 32px rgba(255, 64, 64, 0.16),
     0 0 22px rgba(255, 64, 64, 0.12);
@@ -218,8 +284,16 @@
 
 .geo-marker.threat {
   color: var(--orange);
-  border: 1px solid rgba(251, 146, 60, 0.55);
-  background: rgba(251, 146, 60, 0.16);
+  border: 1px solid rgba(251, 146, 60, 0.58);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(251, 146, 60, 0.22),
+      rgba(69, 26, 3, 0.35)
+    );
+  box-shadow:
+    0 0 18px rgba(251, 146, 60, 0.2),
+    inset 0 0 12px rgba(251, 146, 60, 0.08);
   text-shadow: 0 0 10px rgba(251, 146, 60, 0.45);
 }
 
@@ -230,14 +304,23 @@
 
 .geo-marker.vessel {
   color: var(--cyan);
-  border: 1px solid rgba(34, 211, 238, 0.42);
-  background: rgba(34, 211, 238, 0.13);
+  border: 1px solid rgba(34, 211, 238, 0.5);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(34, 211, 238, 0.2),
+      rgba(8, 47, 73, 0.34)
+    );
+  box-shadow:
+    0 0 18px rgba(34, 211, 238, 0.18),
+    inset 0 0 12px rgba(34, 211, 238, 0.08);
 }
 
 .geo-marker.vessel.active {
   box-shadow:
     0 0 18px rgba(34, 211, 238, 0.24),
-    0 0 34px rgba(34, 211, 238, 0.09);
+    0 0 34px rgba(34, 211, 238, 0.09),
+    inset 0 0 14px rgba(34, 211, 238, 0.1);
 }
 
 @keyframes blinkThreat {
@@ -256,8 +339,8 @@
 
   50% {
     box-shadow:
-      inset 0 0 44px rgba(255, 64, 64, 0.28),
-      0 0 34px rgba(255, 64, 64, 0.24);
+      inset 0 0 46px rgba(255, 64, 64, 0.3),
+      0 0 38px rgba(255, 64, 64, 0.28);
   }
 }
 
@@ -434,7 +517,7 @@
   position: absolute;
   right: 12px;
   bottom: 10px;
-  z-index: 8;
+  z-index: 12;
   padding: 5px 8px;
   border: 1px solid rgba(56, 189, 248, 0.24);
   border-radius: 999px;
@@ -576,7 +659,7 @@
   position: absolute;
   right: 18px;
   bottom: 18px;
-  z-index: 7;
+  z-index: 12;
   display: flex;
   gap: 8px;
   padding: 8px 10px;
@@ -584,7 +667,8 @@
   border-radius: 999px;
   background: rgba(4, 10, 18, 0.76);
   box-shadow: 0 0 22px rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(7px);
+  -webkit-backdrop-filter: blur(7px);
 }
 
 .map-layer-readout span {
@@ -608,6 +692,19 @@
 
 .map-layer-readout span.danger {
   color: var(--red);
+}
+
+/* =========================================================
+   Reduced Motion
+========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  .map-scan-overlay,
+  .real-map-shell.expanded::after,
+  .geo-marker.sector.active,
+  .geo-marker.threat.active .geo-marker-icon {
+    animation: none;
+  }
 }
 
 /* =========================================================
