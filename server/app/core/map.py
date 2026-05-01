@@ -52,52 +52,77 @@ def build_tracks(events: list[dict[str, Any]]) -> list[dict[str, Any]]:
 
 
 def build_assets(signal_kinds: set[str], event_types: set[str]) -> list[dict[str, Any]]:
+    """
+    Asset/adaptor status model.
+
+    If any event has entered the pipeline, the mock sensor/adapter layer is treated
+    as live. Threat signals then override the normal live state into ALERTING.
+    """
+    system_live = len(event_types) > 0
+
+    cyber_status = "streaming" if system_live else "operational"
+    physical_status = "active" if system_live else "operational"
+    osint_status = "active" if system_live else "operational"
+
     return [
         {
             "id": "asset-auth-gw-01",
             "name": "AUTH SERVER",
             "kind": "auth_gateway",
             "domain": "cyber",
-            "status": "alerting" if has_auth_threat(signal_kinds) else "operational",
+            "status": "alerting" if has_auth_threat(signal_kinds) else cyber_status,
         },
         {
             "id": "asset-edr-network",
             "name": "EDR SENSOR NETWORK",
             "kind": "endpoint_detection",
             "domain": "cyber",
-            "status": "alerting"
-            if "network.lateral_movement" in signal_kinds
-            or "identity.privilege_escalation" in signal_kinds
-            else "operational",
+            "status": (
+                "alerting"
+                if "network.lateral_movement" in signal_kinds
+                or "identity.privilege_escalation" in signal_kinds
+                else cyber_status
+            ),
         },
         {
             "id": "asset-network-gateway",
             "name": "NETWORK GATEWAY",
             "kind": "network_gateway",
             "domain": "cyber",
-            "status": "alerting"
-            if "network.data_exfiltration" in signal_kinds
-            else "operational",
+            "status": (
+                "alerting"
+                if "network.data_exfiltration" in signal_kinds
+                else cyber_status
+            ),
         },
         {
             "id": "asset-uas-monitoring",
             "name": "UAS MONITORING",
             "kind": "uas_sensor",
             "domain": "physical",
-            "status": "active"
-            if "physical.drone_recon" in signal_kinds
-            or "physical.drone" in event_types
-            else "operational",
+            "status": (
+                "alerting"
+                if "physical.drone_recon" in signal_kinds
+                else physical_status
+            ),
         },
         {
             "id": "asset-ais-monitoring",
             "name": "AIS MONITORING",
             "kind": "ais_feed",
             "domain": "osint",
-            "status": "active"
-            if "osint.ais_anomaly" in signal_kinds
-            or "osint.ais_anomaly" in event_types
-            else "operational",
+            "status": (
+                "alerting"
+                if "osint.ais_anomaly" in signal_kinds
+                else osint_status
+            ),
+        },
+        {
+            "id": "asset-fusion-core",
+            "name": "FUSION CORE",
+            "kind": "fusion_engine",
+            "domain": "fusion",
+            "status": "live" if system_live else "standby",
         },
     ]
 

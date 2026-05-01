@@ -1,11 +1,23 @@
 // components/AssetStatus.tsx
 
+type AssetStatusValue =
+  | "operational"
+  | "streaming"
+  | "live"
+  | "standby"
+  | "alerting"
+  | "active"
+  | "degraded"
+  | "offline"
+  | "unknown"
+  | string;
+
 type Asset = {
   id: string;
   name: string;
   kind: string;
-  domain: "cyber" | "physical" | "osint" | string;
-  status: "operational" | "alerting" | "active" | "degraded" | "offline" | string;
+  domain: "cyber" | "physical" | "osint" | "fusion" | string;
+  status: AssetStatusValue;
 };
 
 type Props = {
@@ -48,16 +60,39 @@ const FALLBACK_ASSETS: Asset[] = [
     domain: "osint",
     status: "operational",
   },
+  {
+    id: "asset-fusion-core",
+    name: "FUSION CORE",
+    kind: "fusion_engine",
+    domain: "fusion",
+    status: "standby",
+  },
 ];
 
 export default function AssetStatus({ assets }: Props) {
   const displayAssets = assets && assets.length > 0 ? assets : FALLBACK_ASSETS;
 
+  const liveCount = displayAssets.filter((asset) => {
+    const status = normalizeStatus(asset.status);
+
+    return (
+      status === "streaming" ||
+      status === "active" ||
+      status === "live" ||
+      status === "alerting"
+    );
+  }).length;
+
+  const headerText =
+    liveCount > 0
+      ? `${liveCount}/${displayAssets.length} LIVE`
+      : `${displayAssets.length} MONITORED`;
+
   return (
     <div className="panel asset-panel">
       <div className="panel-header">
         <h2>ASSET STATUS</h2>
-        <span>{displayAssets.length} MONITORED</span>
+        <span>{headerText}</span>
       </div>
 
       <div className="asset-list">
@@ -65,8 +100,12 @@ export default function AssetStatus({ assets }: Props) {
           const normalizedStatus = normalizeStatus(asset.status);
 
           return (
-            <div key={asset.id} className={`asset-row ${normalizedStatus}`}>
+            <div
+              key={asset.id}
+              className={`asset-row ${normalizedStatus} ${asset.domain}`}
+            >
               <span>{asset.name}</span>
+
               <strong className={normalizedStatus}>
                 {formatStatus(asset.status)}
               </strong>
@@ -81,6 +120,9 @@ export default function AssetStatus({ assets }: Props) {
 function normalizeStatus(status: string) {
   const normalized = String(status || "unknown").toLowerCase();
 
+  if (normalized === "live") return "live";
+  if (normalized === "streaming") return "streaming";
+  if (normalized === "standby") return "standby";
   if (normalized === "active") return "active";
   if (normalized === "alerting") return "alerting";
   if (normalized === "degraded") return "degraded";

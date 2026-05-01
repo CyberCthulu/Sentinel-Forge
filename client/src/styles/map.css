@@ -597,3 +597,46 @@
     justify-content: center;
   }
 }
+
+/* =========================================================
+   Asset Status: Live Adapter States
+========================================================= */
+
+.asset-row strong.streaming,
+.asset-list strong.streaming {
+  color: var(--blue);
+  text-shadow: 0 0 10px rgba(56, 189, 248, 0.32);
+}
+
+.asset-row strong.live,
+.asset-list strong.live {
+  color: var(--green);
+  text-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+}
+
+.asset-row strong.standby,
+.asset-list strong.standby {
+  color: var(--muted);
+}
+
+.asset-row.streaming,
+.asset-row.live {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(56, 189, 248, 0.055),
+      transparent 45%
+    );
+}
+
+.asset-row.live {
+  border-bottom-color: rgba(34, 197, 94, 0.22);
+}
+
+.asset-row.streaming {
+  border-bottom-color: rgba(56, 189, 248, 0.2);
+}
+
+.asset-row.standby {
+  opacity: 0.72;
+}
