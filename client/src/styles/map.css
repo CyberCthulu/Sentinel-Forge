@@ -259,6 +259,12 @@
   flex: 0 0 28px;
 }
 
+.asset-panel .panel-header span {
+  color: var(--muted);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
 .asset-list {
   flex: 1;
   min-height: 0;
@@ -268,16 +274,19 @@
   overflow-y: auto;
 }
 
+.asset-row,
 .asset-list div {
   flex: 0 0 auto;
   display: flex;
   justify-content: space-between;
+  align-items: center;
   gap: 12px;
   border-bottom: 1px solid rgba(84, 139, 184, 0.12);
   padding: 7px 0;
   font-size: 10.5px;
 }
 
+.asset-row span,
 .asset-list span {
   color: #dbeafe;
   white-space: nowrap;
@@ -285,11 +294,56 @@
   text-overflow: ellipsis;
 }
 
+.asset-row strong,
 .asset-list strong {
-  color: var(--green);
   white-space: nowrap;
+  font-size: 9.5px;
+  letter-spacing: 0.05em;
 }
 
+.asset-row strong.operational,
+.asset-list strong.operational {
+  color: var(--green);
+}
+
+.asset-row strong.active,
 .asset-list strong.active {
   color: var(--orange);
+  text-shadow: 0 0 10px rgba(251, 146, 60, 0.32);
+}
+
+.asset-row strong.alerting,
+.asset-list strong.alerting {
+  color: var(--red);
+  text-shadow: 0 0 10px rgba(255, 64, 64, 0.34);
+}
+
+.asset-row strong.degraded,
+.asset-list strong.degraded {
+  color: var(--yellow);
+}
+
+.asset-row strong.offline,
+.asset-list strong.offline,
+.asset-row strong.unknown,
+.asset-list strong.unknown {
+  color: var(--muted);
+}
+
+.asset-row.active,
+.asset-row.alerting {
+  background:
+    linear-gradient(
+      90deg,
+      rgba(255, 64, 64, 0.055),
+      transparent 45%
+    );
+}
+
+.asset-row.active {
+  border-bottom-color: rgba(251, 146, 60, 0.2);
+}
+
+.asset-row.alerting {
+  border-bottom-color: rgba(255, 64, 64, 0.22);
 }

@@ -52,7 +52,7 @@ export default function Dashboard() {
         </section>
 
         <section className="dashboard-area asset-area">
-          <AssetStatus />
+          <AssetStatus assets={state.map_state?.assets}/>
         </section>
       </main>
     </div>
