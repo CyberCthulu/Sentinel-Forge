@@ -1,12 +1,77 @@
-import { useState } from "react";
+// components/IncidentCard.tsx
+import { useEffect, useMemo, useState } from "react";
 import { analyzeIncident } from "../services/api";
 import "../styles/incident.css";
 
-export default function IncidentCard({ incident, correlation }: any) {
+type AnalystOutput = {
+  assessment: string;
+  priority: string;
+  threat_summary: string;
+  why_it_matters: string;
+  next_steps: string[];
+  operator_note: string;
+  confidence_rationale: string;
+  decision_window: string;
+  provider: string;
+};
+
+type Props = {
+  incident: any;
+  correlation?: any;
+};
+
+export default function IncidentCard({ incident, correlation }: Props) {
   const [open, setOpen] = useState(false);
-  const [agent, setAgent] = useState<any>(null);
-  const [agentLoading, setAgentLoading] = useState(false);
-  const [agentError, setAgentError] = useState<string | null>(null);
+  const [analyst, setAnalyst] = useState<AnalystOutput | null>(null);
+  const [analystLoading, setAnalystLoading] = useState(false);
+  const [analystError, setAnalystError] = useState<string | null>(null);
+
+  const analystContextKey = useMemo(() => {
+    if (!incident || !correlation) return "no-active-context";
+
+    const signalKinds = Array.isArray(correlation?.signals)
+      ? correlation.signals
+          .map((signal: any) => signal?.kind || "")
+          .filter(Boolean)
+          .sort()
+          .join("|")
+      : "";
+
+    const evidenceCount = Array.isArray(correlation?.signals)
+      ? correlation.signals.reduce((total: number, signal: any) => {
+          return total + (Array.isArray(signal?.evidence) ? signal.evidence.length : 0);
+        }, 0)
+      : 0;
+
+    const actions = Array.isArray(incident?.recommended_actions)
+      ? incident.recommended_actions.join("|")
+      : "";
+
+    return [
+      incident.type,
+      incident.severity,
+      Number(incident.confidence || 0).toFixed(2),
+      Number(correlation?.confidence || 0).toFixed(2),
+      correlation?.level || "low",
+      evidenceCount,
+      signalKinds,
+      actions,
+    ].join("::");
+  }, [
+    incident?.type,
+    incident?.severity,
+    incident?.confidence,
+    incident?.recommended_actions,
+    correlation?.confidence,
+    correlation?.level,
+    correlation?.signals,
+  ]);
+
+  useEffect(() => {
+    setAnalyst(null);
+    setAnalystError(null);
+    setAnalystLoading(false);
+  }, [analystContextKey]);
 
   if (!incident) {
     return (
@@ -24,39 +89,54 @@ export default function IncidentCard({ incident, correlation }: any) {
   }
 
   const confidence = Math.round((incident.confidence || 0) * 100);
+  const severity = String(incident.severity || "low").toLowerCase();
 
-  const handleOpen = () => {
-    setOpen(true);
-    setAgent(null);
-    setAgentError(null);
-    setAgentLoading(false);
-  };
+  const keyFactors = Array.isArray(incident.why) ? incident.why : [];
+
+  const recommendedActions = Array.isArray(incident.recommended_actions)
+    ? incident.recommended_actions
+    : [];
+
+  const contributingSignals = Array.isArray(incident.signals)
+    ? incident.signals
+    : [];
 
   const handleAskAnalyst = async () => {
-    setAgentLoading(true);
-    setAgentError(null);
+    if (!incident || !correlation) {
+      setAnalystError("No active incident context is available for analyst review.");
+      return;
+    }
+
+    setAnalystLoading(true);
+    setAnalystError(null);
 
     try {
-      const result = await analyzeIncident({
-        correlation,
+      const response = await analyzeIncident({
         incident,
+        correlation,
       });
 
-      setAgent(result.agent);
+      setAnalyst(response.agent);
     } catch (error) {
       console.error(error);
-      setAgentError("Sentinel Analyst is unavailable. Try again.");
+      setAnalystError("Analyst request failed. Confirm the API server is running.");
     } finally {
-      setAgentLoading(false);
+      setAnalystLoading(false);
     }
   };
+
+  const analystButtonLabel = analystLoading
+    ? "ANALYZING..."
+    : analyst
+      ? "REFRESH ANALYST"
+      : "ASK ANALYST";
 
   return (
     <>
       <button
         type="button"
-        className={`panel incident-panel incident-clickable ${incident.severity}`}
-        onClick={handleOpen}
+        className={`panel incident-panel incident-clickable ${severity}`}
+        onClick={() => setOpen(true)}
       >
         <div className="panel-header">
           <h2>INCIDENT ASSESSMENT</h2>
@@ -68,7 +148,8 @@ export default function IncidentCard({ incident, correlation }: any) {
 
           <div className="incident-main">
             <h3>
-              {incident.severity.toUpperCase()} — {incident.type.toUpperCase()}
+              {severity.toUpperCase()} —{" "}
+              {String(incident.type || "Incident").toUpperCase()}
             </h3>
             <p>{incident.summary}</p>
           </div>
@@ -83,8 +164,8 @@ export default function IncidentCard({ incident, correlation }: any) {
           <section>
             <h4>KEY FACTORS</h4>
             <ul>
-              {incident.why?.map((w: string, i: number) => (
-                <li key={i}>{w}</li>
+              {keyFactors.map((item: string, index: number) => (
+                <li key={index}>{item}</li>
               ))}
             </ul>
           </section>
@@ -92,8 +173,8 @@ export default function IncidentCard({ incident, correlation }: any) {
           <section>
             <h4>RECOMMENDED ACTIONS</h4>
             <ul>
-              {incident.recommended_actions?.map((a: string, i: number) => (
-                <li key={i}>{a}</li>
+              {recommendedActions.map((item: string, index: number) => (
+                <li key={index}>{item}</li>
               ))}
             </ul>
           </section>
@@ -101,123 +182,147 @@ export default function IncidentCard({ incident, correlation }: any) {
       </button>
 
       {open && (
-        <div className="incident-modal-backdrop" onClick={() => setOpen(false)}>
+        <div
+          className="incident-modal-backdrop"
+          onClick={() => setOpen(false)}
+        >
           <div
-            className={`incident-modal ${incident.severity}`}
-            onClick={(e) => e.stopPropagation()}
+            className={`incident-modal ${severity}`}
+            onClick={(event) => event.stopPropagation()}
           >
             <div className="incident-modal-header">
               <div>
                 <span>INCIDENT ID: {incident.id}</span>
                 <h2>
-                  {incident.severity.toUpperCase()} —{" "}
-                  {incident.type.toUpperCase()}
+                  {severity.toUpperCase()} —{" "}
+                  {String(incident.type || "Incident").toUpperCase()}
                 </h2>
               </div>
 
-              <button type="button" onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                aria-label="Close incident modal"
+              >
                 ×
               </button>
             </div>
 
-            <div className="incident-modal-summary">
-              <p>{incident.summary}</p>
+            <div className="incident-modal-body">
+              <section className="incident-modal-summary">
+                <p>{incident.summary}</p>
 
-              <div className="incident-modal-confidence">
-                <span>CONFIDENCE</span>
-                <strong>{confidence}%</strong>
-              </div>
-            </div>
-
-            <div className="incident-modal-grid">
-              <section>
-                <h4>KEY FACTORS</h4>
-                <ul>
-                  {incident.why?.map((w: string, i: number) => (
-                    <li key={i}>{w}</li>
-                  ))}
-                </ul>
+                <div className="incident-modal-confidence">
+                  <span>CONFIDENCE</span>
+                  <strong>{confidence}%</strong>
+                </div>
               </section>
 
-              <section>
-                <h4>RECOMMENDED ACTIONS</h4>
-                <ul>
-                  {incident.recommended_actions?.map((a: string, i: number) => (
-                    <li key={i}>{a}</li>
-                  ))}
-                </ul>
+              <section className="incident-modal-grid">
+                <div className="incident-modal-card">
+                  <h4>KEY FACTORS</h4>
+                  <ul>
+                    {keyFactors.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="incident-modal-card">
+                  <h4>RECOMMENDED ACTIONS</h4>
+                  <ul>
+                    {recommendedActions.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="incident-modal-card">
+                  <h4>CONTRIBUTING SIGNALS</h4>
+                  <ul>
+                    {contributingSignals.map((item: string, index: number) => (
+                      <li key={index}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="incident-modal-card">
+                  <h4>OPERATOR SUMMARY</h4>
+                  <p>
+                    {incident.narrative ||
+                      "Sentinel Forge correlated the available signals into a staged threat assessment. The current classification reflects signal confidence, domain coverage, and escalation pattern."}
+                  </p>
+                </div>
               </section>
 
-              <section>
-                <h4>CONTRIBUTING SIGNALS</h4>
-                <ul>
-                  {incident.signals?.map((s: string, i: number) => (
-                    <li key={i}>{s}</li>
-                  ))}
-                </ul>
-              </section>
-
-              <section>
-                <h4>OPERATOR SUMMARY</h4>
-                <p>
-                  Sentinel Forge correlated the available signals into a staged
-                  threat assessment. The current classification reflects signal
-                  confidence, domain coverage, and escalation pattern.
-                </p>
-              </section>
-
-              <section className="analyst-section">
-                <div className="analyst-section-header">
+              <section className="analyst-panel">
+                <div className="analyst-panel-header">
                   <div>
                     <h4>SENTINEL ANALYST</h4>
-                    <p>Operator-invoked decision support.</p>
+                    <p>
+                      Operator-invoked decision support. AI does not block
+                      real-time detection.
+                    </p>
                   </div>
 
                   <button
                     type="button"
                     className="analyst-btn"
                     onClick={handleAskAnalyst}
-                    disabled={agentLoading}
+                    disabled={analystLoading}
                   >
-                    {agentLoading ? "ANALYZING..." : "ASK ANALYST"}
+                    {analystButtonLabel}
                   </button>
                 </div>
 
-                {agentError && <p className="analyst-error">{agentError}</p>}
+                {analystError && (
+                  <div className="analyst-error">{analystError}</div>
+                )}
 
-                {agentLoading && (
+                {analystLoading && (
                   <div className="analyst-loading">
-                    Sentinel Analyst is evaluating the incident context...
+                    Sentinel Analyst is reviewing the current fused incident context...
                   </div>
                 )}
 
-                {agent && (
+                {!analyst && !analystLoading && !analystError && (
+                  <div className="analyst-placeholder">
+                    Analyst output will appear here after operator request.
+                  </div>
+                )}
+
+                {analyst && (
                   <div className="analyst-output">
                     <div className="analyst-meta">
-                      <span>PROVIDER: {agent.provider}</span>
-                      <span>WINDOW: {agent.decision_window}</span>
+                      <span>PROVIDER: {analyst.provider}</span>
+                      <span>PRIORITY: {analyst.priority}</span>
+                      <span>WINDOW: {analyst.decision_window}</span>
                     </div>
 
-                    <h5>{agent.assessment}</h5>
+                    <h5>{analyst.assessment}</h5>
 
                     <p>
-                      <strong>Why it matters:</strong> {agent.why_it_matters}
+                      <strong>Threat summary:</strong> {analyst.threat_summary}
                     </p>
 
                     <p>
-                      <strong>Operator note:</strong> {agent.operator_note}
+                      <strong>Why it matters:</strong> {analyst.why_it_matters}
+                    </p>
+
+                    <p>
+                      <strong>Operator note:</strong> {analyst.operator_note}
                     </p>
 
                     <p>
                       <strong>Confidence rationale:</strong>{" "}
-                      {agent.confidence_rationale}
+                      {analyst.confidence_rationale}
                     </p>
 
                     <div>
                       <strong>Next steps:</strong>
                       <ul>
-                        {agent.next_steps?.map((step: string, i: number) => (
-                          <li key={i}>{step}</li>
+                        {analyst.next_steps?.map((step: string, index: number) => (
+                          <li key={index}>{step}</li>
                         ))}
                       </ul>
                     </div>
