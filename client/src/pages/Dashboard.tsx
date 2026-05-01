@@ -1,4 +1,5 @@
-// pages/Dashboard.tsx
+import { useState } from "react";
+
 import TopBar from "../components/TopBar";
 import LogStream from "../components/LogStream";
 import SignalBreakdown from "../components/SignalBreakdown";
@@ -9,19 +10,24 @@ import AssetStatus from "../components/AssetStatus";
 
 import { useSimulation } from "../hooks/useSimulation";
 
+type FocusedSignal = {
+  kind: string;
+  evidenceIds: string[];
+  token: number;
+} | null;
+
 export default function Dashboard() {
   const {
     state,
-    scenarios,
-    selectedScenarioId,
     step,
     reset,
     toggleRun,
-    changeScenario,
     isAutoRunning,
     isSystemRunning,
     isBusy,
   } = useSimulation();
+
+  const [focusedSignal, setFocusedSignal] = useState<FocusedSignal>(null);
 
   return (
     <div className="dashboard-shell">
@@ -29,9 +35,6 @@ export default function Dashboard() {
         onRunToggle={toggleRun}
         onStep={step}
         onReset={reset}
-        onScenarioChange={changeScenario}
-        scenarios={scenarios}
-        selectedScenarioId={selectedScenarioId}
         isAutoRunning={isAutoRunning}
         isSystemRunning={isSystemRunning}
         isBusy={isBusy}
@@ -39,15 +42,36 @@ export default function Dashboard() {
 
       <main className="dashboard-grid">
         <section className="dashboard-area event-area">
-          <LogStream events={state.events} />
+          <LogStream
+            events={state.events}
+            focusedEventIds={focusedSignal?.evidenceIds ?? []}
+            focusToken={focusedSignal?.token ?? 0}
+          />
         </section>
 
         <section className="dashboard-area signal-area">
-          <SignalBreakdown signals={state.signals} />
+          <SignalBreakdown
+            signals={state.signals}
+            selectedSignalKind={focusedSignal?.kind ?? null}
+            onSignalSelect={(signal) => {
+              setFocusedSignal((current) => {
+                if (current?.kind === signal.kind) {
+                  return null;
+                }
+
+                return {
+                  kind: signal.kind,
+                  evidenceIds: signal.evidence ?? [],
+                  token: Date.now(),
+                };
+              });
+            }}
+          />
         </section>
 
         <section className="dashboard-area right-top-area">
           <CorrelationScore correlation={state.correlation} />
+
           <IncidentCard
             incident={state.incident}
             correlation={state.correlation}

@@ -2,19 +2,12 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/topbar.css";
 
-type ScenarioOption = {
-  id: string;
-  name: string;
-  description: string;
-};
+type MaybePromise<T = void> = T | Promise<T>;
 
 type Props = {
-  onRunToggle: () => void;
-  onStep: () => void;
-  onReset: () => void;
-  onScenarioChange: (scenarioId: string) => void;
-  scenarios: ScenarioOption[];
-  selectedScenarioId: string;
+  onRunToggle: () => MaybePromise;
+  onStep: () => MaybePromise;
+  onReset: () => MaybePromise;
   isAutoRunning: boolean;
   isSystemRunning: boolean;
   isBusy?: boolean;
@@ -24,9 +17,6 @@ export default function TopBar({
   onRunToggle,
   onStep,
   onReset,
-  onScenarioChange,
-  scenarios,
-  selectedScenarioId,
   isAutoRunning,
   isSystemRunning,
   isBusy = false,
@@ -48,24 +38,28 @@ export default function TopBar({
   }, [now, startedAt]);
 
   const utcTime = useMemo(() => {
-    return now.toISOString().slice(11, 19) + " Z";
+    return `${now.toISOString().slice(11, 19)} Z`;
   }, [now]);
 
   const utcDate = useMemo(() => {
     return now.toISOString().slice(0, 10).toUpperCase();
   }, [now]);
 
-  const handleRunToggle = () => {
+  const handleRunToggle = async () => {
     if (!isAutoRunning) {
       setStartedAt(Date.now());
     }
 
-    onRunToggle();
+    await onRunToggle();
   };
 
-  const handleReset = () => {
+  const handleStep = async () => {
+    await onStep();
+  };
+
+  const handleReset = async () => {
     setStartedAt(Date.now());
-    onReset();
+    await onReset();
   };
 
   return (
@@ -81,6 +75,7 @@ export default function TopBar({
 
       <div className="topbar-controls">
         <button
+          type="button"
           className={`control-btn start ${isAutoRunning ? "active" : ""}`}
           onClick={handleRunToggle}
           disabled={isBusy && !isAutoRunning}
@@ -89,14 +84,16 @@ export default function TopBar({
         </button>
 
         <button
+          type="button"
           className="control-btn"
-          onClick={onStep}
+          onClick={handleStep}
           disabled={isBusy || isAutoRunning}
         >
           » STEP
         </button>
 
         <button
+          type="button"
           className="control-btn"
           onClick={handleReset}
           disabled={isBusy}
@@ -113,19 +110,7 @@ export default function TopBar({
 
       <div className="scenario-box">
         <span>SCENARIO</span>
-
-        <select
-          className="scenario-select"
-          value={selectedScenarioId}
-          disabled={isBusy || isAutoRunning}
-          onChange={(event) => onScenarioChange(event.target.value)}
-        >
-          {scenarios.map((scenario) => (
-            <option key={scenario.id} value={scenario.id}>
-              {scenario.name}
-            </option>
-          ))}
-        </select>
+        <strong>Coordinated Intrusion</strong>
       </div>
 
       <div className="time-box">
