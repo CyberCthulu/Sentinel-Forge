@@ -1,3 +1,4 @@
+// pages/Dashboard.tsx
 import TopBar from "../components/TopBar";
 import LogStream from "../components/LogStream";
 import SignalBreakdown from "../components/SignalBreakdown";
@@ -11,9 +12,12 @@ import { useSimulation } from "../hooks/useSimulation";
 export default function Dashboard() {
   const {
     state,
+    scenarios,
+    selectedScenarioId,
     step,
     reset,
     toggleRun,
+    changeScenario,
     isAutoRunning,
     isSystemRunning,
     isBusy,
@@ -25,6 +29,9 @@ export default function Dashboard() {
         onRunToggle={toggleRun}
         onStep={step}
         onReset={reset}
+        onScenarioChange={changeScenario}
+        scenarios={scenarios}
+        selectedScenarioId={selectedScenarioId}
         isAutoRunning={isAutoRunning}
         isSystemRunning={isSystemRunning}
         isBusy={isBusy}
@@ -52,7 +59,7 @@ export default function Dashboard() {
         </section>
 
         <section className="dashboard-area asset-area">
-          <AssetStatus assets={state.map_state?.assets}/>
+          <AssetStatus assets={state.map_state?.assets} />
         </section>
       </main>
     </div>

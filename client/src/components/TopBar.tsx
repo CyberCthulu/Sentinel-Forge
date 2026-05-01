@@ -2,10 +2,19 @@
 import { useEffect, useMemo, useState } from "react";
 import "../styles/topbar.css";
 
+type ScenarioOption = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 type Props = {
   onRunToggle: () => void;
   onStep: () => void;
   onReset: () => void;
+  onScenarioChange: (scenarioId: string) => void;
+  scenarios: ScenarioOption[];
+  selectedScenarioId: string;
   isAutoRunning: boolean;
   isSystemRunning: boolean;
   isBusy?: boolean;
@@ -15,6 +24,9 @@ export default function TopBar({
   onRunToggle,
   onStep,
   onReset,
+  onScenarioChange,
+  scenarios,
+  selectedScenarioId,
   isAutoRunning,
   isSystemRunning,
   isBusy = false,
@@ -101,7 +113,19 @@ export default function TopBar({
 
       <div className="scenario-box">
         <span>SCENARIO</span>
-        <strong>Coordinated Intrusion</strong>
+
+        <select
+          className="scenario-select"
+          value={selectedScenarioId}
+          disabled={isBusy || isAutoRunning}
+          onChange={(event) => onScenarioChange(event.target.value)}
+        >
+          {scenarios.map((scenario) => (
+            <option key={scenario.id} value={scenario.id}>
+              {scenario.name}
+            </option>
+          ))}
+        </select>
       </div>
 
       <div className="time-box">

@@ -2,13 +2,21 @@
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 from app.adapters.mock import MockAdapter
 from app.api.routes.agent import router as agent_router
 from app.core.pipeline import run_pipeline
-from app.core.scenario import build_scenario_events
+from app.core.scenario import (
+    DEFAULT_SCENARIO_ID,
+    build_scenario_events,
+    get_scenario_metadata,
+    get_scenarios,
+    scenario_exists,
+)
+from app.generator.background_events import build_background_event
 from app.state.store import StateStore
 
 
@@ -20,19 +28,74 @@ app = FastAPI(title="Sentinel Forge API")
 app.include_router(agent_router)
 
 store = StateStore()
-adapter = MockAdapter({"events": build_scenario_events()})
+
+selected_scenario_id = DEFAULT_SCENARIO_ID
+adapter = MockAdapter({"events": build_scenario_events(selected_scenario_id)})
+
+
+class ScenarioSelectRequest(BaseModel):
+    scenario_id: str
+
+
+def current_scenario() -> dict:
+    return get_scenario_metadata(selected_scenario_id)
 
 
 def reset_adapter():
     global adapter
-    adapter = MockAdapter({"events": build_scenario_events()})
+    adapter = MockAdapter({"events": build_scenario_events(selected_scenario_id)})
+
+
+def run_and_apply_pipeline(state: dict) -> dict:
+    result = run_pipeline(
+        state["events"],
+        previous_correlation=state.get("correlation"),
+    )
+
+    return store.apply_pipeline_result(result)
+
+
+@app.get("/scenarios")
+def list_scenarios():
+    return {
+        "scenarios": get_scenarios(),
+        "selected": current_scenario(),
+    }
+
+
+@app.post("/scenario/select")
+def select_scenario(payload: ScenarioSelectRequest):
+    global selected_scenario_id
+
+    if not scenario_exists(payload.scenario_id):
+        raise HTTPException(status_code=404, detail="Scenario not found")
+
+    selected_scenario_id = payload.scenario_id
+    reset_adapter()
+
+    state = store.reset(scenario=current_scenario())
+    state["meta"]["status"] = "idle"
+    state["meta"]["mode"] = "demo"
+
+    return store.replace(state)
 
 
 @app.post("/simulate/start")
 def start_simulation():
     reset_adapter()
 
-    state = store.reset()
+    state = store.reset(scenario=current_scenario())
+    state["meta"]["status"] = "running"
+    state["meta"]["mode"] = "demo"
+
+    # Emit exactly one telemetry ping on start so the system visibly comes alive.
+    background_event = build_background_event(0)
+    state = store.replace(state)
+    state = store.append_event(background_event)
+
+    state = run_and_apply_pipeline(state)
+
+    state["scenario"] = current_scenario()
     state["meta"]["status"] = "running"
     state["meta"]["mode"] = "demo"
 
@@ -43,25 +106,28 @@ def start_simulation():
 def step_simulation():
     state = store.get()
 
-    event = adapter.fetch_next_event()
+    current_step = store.get_step()
+    scenario_event = adapter.fetch_next_event()
+
     store.increment_step()
 
-    if event:
-        state = store.append_event(event)
+    if scenario_event:
+        # Normal case: advance the selected scenario one event at a time.
+        state = store.append_event(scenario_event)
+        state["meta"]["status"] = "running"
+    else:
+        # Scenario is complete. If the operator manually steps again,
+        # emit a harmless telemetry ping instead of doing nothing.
+        background_event = build_background_event(current_step)
+        state = store.append_event(background_event)
+        state["meta"]["status"] = "complete"
 
-    result = run_pipeline(
-        state["events"],
-        previous_correlation=state.get("correlation"),
-    )
+    state = run_and_apply_pipeline(state)
 
-    state = store.apply_pipeline_result(result)
+    # New event means previous analyst output may no longer match current state.
+    state = store.clear_agent()
 
-    # A new event means the previous analyst answer may be stale.
-    # The operator can explicitly ask the analyst again from the incident popup.
-    if event:
-        state = store.clear_agent()
-
-    state["meta"]["status"] = "running" if event else "complete"
+    state["scenario"] = current_scenario()
     state["meta"]["mode"] = "demo"
 
     return store.replace(state)
@@ -69,13 +135,15 @@ def step_simulation():
 
 @app.get("/state")
 def get_state():
-    return store.get()
+    state = store.get()
+    state["scenario"] = current_scenario()
+    return state
 
 
 @app.post("/reset")
 def reset():
     reset_adapter()
-    return store.reset()
+    return store.reset(scenario=current_scenario())
 
 
 app.add_middleware(

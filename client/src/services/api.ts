@@ -1,6 +1,34 @@
 // services/api.ts
 const BASE_URL = "http://localhost:8000";
 
+export async function getScenarios() {
+  const res = await fetch(`${BASE_URL}/scenarios`);
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch scenarios");
+  }
+
+  return res.json();
+}
+
+export async function selectScenario(scenarioId: string) {
+  const res = await fetch(`${BASE_URL}/scenario/select`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      scenario_id: scenarioId,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to select scenario");
+  }
+
+  return res.json();
+}
+
 export async function startSimulation() {
   const res = await fetch(`${BASE_URL}/simulate/start`, {
     method: "POST",

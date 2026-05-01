@@ -1,11 +1,19 @@
 // hooks/useSimulation.ts
 import { useEffect, useRef, useState } from "react";
 import {
+  getScenarios,
+  selectScenario,
   startSimulation,
   stepSimulation,
   resetSimulation,
   getState,
 } from "../services/api";
+
+type ScenarioOption = {
+  id: string;
+  name: string;
+  description: string;
+};
 
 type SimulationState = {
   events: any[];
@@ -13,6 +21,7 @@ type SimulationState = {
   correlation: any;
   incident: any;
   map_state: any;
+  scenario?: ScenarioOption;
   meta?: {
     mode?: string;
     step?: number;
@@ -26,6 +35,11 @@ const INITIAL_STATE: SimulationState = {
   correlation: null,
   incident: null,
   map_state: null,
+  scenario: {
+    id: "coordinated_intrusion",
+    name: "Coordinated Intrusion",
+    description: "Cyber, physical, and OSINT indicators converge.",
+  },
   meta: {
     mode: "demo",
     step: 0,
@@ -37,6 +51,7 @@ const AUTO_STEP_MS = 900;
 
 export function useSimulation() {
   const [state, setState] = useState<SimulationState>(INITIAL_STATE);
+  const [scenarios, setScenarios] = useState<ScenarioOption[]>([]);
   const [isAutoRunning, setIsAutoRunning] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
@@ -52,6 +67,25 @@ export function useSimulation() {
     const data = await getState();
     applyState(data);
     return data;
+  };
+
+  const loadScenarios = async () => {
+    const data = await getScenarios();
+    setScenarios(data.scenarios || []);
+    return data;
+  };
+
+  const changeScenario = async (scenarioId: string) => {
+    setIsBusy(true);
+    setIsAutoRunning(false);
+
+    try {
+      const data = await selectScenario(scenarioId);
+      applyState(data);
+      return data;
+    } finally {
+      setIsBusy(false);
+    }
   };
 
   const start = async () => {
@@ -122,7 +156,17 @@ export function useSimulation() {
   };
 
   useEffect(() => {
-    refresh();
+    const boot = async () => {
+      setIsBusy(true);
+
+      try {
+        await Promise.all([refresh(), loadScenarios()]);
+      } finally {
+        setIsBusy(false);
+      }
+    };
+
+    boot();
   }, []);
 
   useEffect(() => {
@@ -144,13 +188,17 @@ export function useSimulation() {
 
   const systemStatus = state?.meta?.status ?? "idle";
   const isSystemRunning = systemStatus === "running";
+  const selectedScenarioId = state?.scenario?.id ?? "coordinated_intrusion";
 
   return {
     state,
+    scenarios,
+    selectedScenarioId,
     start,
     step,
     reset,
     toggleRun,
+    changeScenario,
     isAutoRunning,
     isSystemRunning,
     isBusy,
