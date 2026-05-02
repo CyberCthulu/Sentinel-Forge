@@ -8,7 +8,7 @@ def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def interpret(correlation):
+def interpret(correlation, action_status=None, previous_incident=None):
     if not correlation:
         return None
 
@@ -28,9 +28,23 @@ def interpret(correlation):
         has_osint=has_osint,
     )
     actions = build_actions(kinds, confidence, has_physical, has_osint)
+    action_status = action_status or {}
+    completed_required = [action for action in actions if action_status.get(action)]
+
+    incident_id = (
+        previous_incident.get("id")
+        if previous_incident and previous_incident.get("id")
+        else f"INC-{uuid.uuid4().hex[:6].upper()}"
+    )
+
+    incident_status = "active"
+    if actions and len(completed_required) == len(actions):
+        incident_status = "resolved"
+    elif completed_required:
+        incident_status = "containment_in_progress"
 
     return {
-        "id": f"INC-{uuid.uuid4().hex[:6].upper()}",
+        "id": incident_id,
         "type": title,
         "severity": severity,
         "confidence": confidence,
@@ -40,6 +54,8 @@ def interpret(correlation):
         "recommended_actions": actions,
         "timestamp": now(),
         "why": why,
+        "status": incident_status,
+        "resolved_at": now() if incident_status == "resolved" else None,
     }
 
 

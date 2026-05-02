@@ -93,6 +93,7 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
 
   const confidence = Math.round((incident.confidence || 0) * 100);
   const severity = String(incident.severity || "low").toLowerCase();
+  const incidentStatus = String(incident.status || "active").replaceAll("_", " ").toUpperCase();
 
   const keyFactors = Array.isArray(incident.why) ? incident.why : [];
 
@@ -183,7 +184,7 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
       >
         <div className="panel-header">
           <h2>INCIDENT ASSESSMENT</h2>
-          <span className="incident-status">STATUS: ACTIVE</span>
+          <span className="incident-status">STATUS: {incidentStatus}</span>
         </div>
 
         <div className="incident-hero">

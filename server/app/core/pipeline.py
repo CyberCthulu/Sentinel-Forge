@@ -3,10 +3,13 @@ from app.normalization.normalizer import normalize_events
 from app.core.detection import detect, serialize_signal
 from app.core.correlation import correlate
 from app.core.interpreter import interpret
+from dataclasses import replace
+
 from app.core.map import build_map_state
+from app.response.effects import MITIGATED_WEIGHT_FACTOR, build_mitigation_index
 
 
-def run_pipeline(events, previous_correlation=None):
+def run_pipeline(events, previous_correlation=None, operator_actions=None, previous_incident=None):
     previous_correlation = previous_correlation or {}
     previous_history = previous_correlation.get("history", [])
 
@@ -14,13 +17,38 @@ def run_pipeline(events, previous_correlation=None):
 
     signals = detect(normalized_events)
 
-    correlation = correlate(signals, previous_history=previous_history)
+    action_status = operator_actions or {}
+    mitigated_by_kind = build_mitigation_index(action_status)
 
-    incident = interpret(correlation) if signals else None
+    adjusted_signals = []
+    for signal in signals:
+        mitigated_by = mitigated_by_kind.get(signal.kind)
+        if mitigated_by:
+            metadata = {**signal.metadata, "status": "mitigated", "mitigated_by": mitigated_by}
+            adjusted_signals.append(
+                replace(
+                    signal,
+                    active=False,
+                    weight=round(float(signal.weight) * MITIGATED_WEIGHT_FACTOR, 3),
+                    metadata=metadata,
+                )
+            )
+            continue
 
-    map_state = build_map_state(normalized_events, signals=signals)
+        metadata = {**signal.metadata, "status": "active"}
+        adjusted_signals.append(replace(signal, active=True, metadata=metadata))
 
-    serialized_signals = [serialize_signal(signal) for signal in signals]
+    correlation = correlate(adjusted_signals, previous_history=previous_history)
+
+    incident = interpret(
+        correlation,
+        action_status=action_status,
+        previous_incident=previous_incident,
+    ) if adjusted_signals else None
+
+    map_state = build_map_state(normalized_events, signals=adjusted_signals)
+
+    serialized_signals = [serialize_signal(signal) for signal in adjusted_signals]
 
     serialized_correlation = {
         "confidence": correlation["confidence"],
