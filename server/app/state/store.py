@@ -53,6 +53,7 @@ def build_initial_state(scenario: Optional[dict[str, Any]] = None) -> dict[str, 
             "status": "idle",
         },
         "operator_actions": {},
+        "resolved_incidents": [],
     }
 
 
@@ -140,6 +141,11 @@ class StateStore:
                 self._state["incident"],
                 tracking,
             )
+
+            if self._state["incident"].get("status") == "resolved":
+                resolved = self._state.setdefault("resolved_incidents", [])
+                if not any(item.get("id") == incident_id for item in resolved):
+                    resolved.append(deepcopy(self._state["incident"]))
 
         if "agent" in result:
             self._state["agent"] = result.get("agent")

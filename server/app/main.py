@@ -1,5 +1,6 @@
 # app/main.py
 from pathlib import Path
+from typing import Optional
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
@@ -37,11 +38,15 @@ class ScenarioSelectRequest(BaseModel):
     scenario_id: str
 
 
+class IncidentResolveRequest(BaseModel):
+    incident_id: str
+
+
 class IncidentActionUpdateRequest(BaseModel):
     incident_id: str
     action: str
     completed: bool
-    note: str | None = None
+    note: Optional[str] = None
 
 
 def current_scenario() -> dict:
@@ -54,9 +59,14 @@ def reset_adapter():
 
 
 def run_and_apply_pipeline(state: dict) -> dict:
+    incident_id = (state.get("incident") or {}).get("id")
+    operator_actions = state.get("operator_actions", {}).get(incident_id, {}).get("action_status", {}) if incident_id else {}
+
     result = run_pipeline(
         state["events"],
         previous_correlation=state.get("correlation"),
+        operator_actions=operator_actions,
+        previous_incident=state.get("incident"),
     )
 
     return store.apply_pipeline_result(result)
@@ -153,14 +163,47 @@ def reset():
     return store.reset(scenario=current_scenario())
 
 
+
+
+@app.post("/incident/resolve")
+def resolve_incident(payload: IncidentResolveRequest):
+    state = store.get()
+    incident = state.get("incident")
+
+    if not incident or incident.get("id") != payload.incident_id:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    incident["manually_resolved"] = True
+    state["incident"] = incident
+    store.replace(state)
+
+    result = run_pipeline(
+        state["events"],
+        previous_correlation=state.get("correlation"),
+        operator_actions=state.get("operator_actions", {}).get(payload.incident_id, {}).get("action_status", {}),
+        previous_incident=incident,
+    )
+
+    return store.apply_pipeline_result(result)
+
+
 @app.post("/incident/action")
 def update_incident_action(payload: IncidentActionUpdateRequest):
-    return store.set_incident_action_status(
+    state = store.set_incident_action_status(
         incident_id=payload.incident_id,
         action=payload.action,
         completed=payload.completed,
         note=payload.note,
     )
+
+    result = run_pipeline(
+        state["events"],
+        previous_correlation=state.get("correlation"),
+        operator_actions=state.get("operator_actions", {}).get(payload.incident_id, {}).get("action_status", {}),
+        previous_incident=state.get("incident"),
+    )
+
+    return store.apply_pipeline_result(result)
 
 
 app.add_middleware(

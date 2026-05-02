@@ -1,6 +1,6 @@
 // components/IncidentCard.tsx
 import { useEffect, useMemo, useState } from "react";
-import { analyzeIncident, updateIncidentAction } from "../services/api";
+import { analyzeIncident, resolveIncident, updateIncidentAction } from "../services/api";
 import "../styles/incident.css";
 
 type AnalystOutput = {
@@ -91,8 +91,10 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
     );
   }
 
-  const confidence = Math.round((incident.confidence || 0) * 100);
+  const riskPercent = Math.round(((incident.active_risk ?? incident.confidence) || 0) * 100);
+  const detectionPercent = Math.round(((incident.detection_confidence ?? incident.confidence) || 0) * 100);
   const severity = String(incident.severity || "low").toLowerCase();
+  const incidentStatus = String(incident.status || "active").replaceAll("_", " ").toUpperCase();
 
   const keyFactors = Array.isArray(incident.why) ? incident.why : [];
 
@@ -114,6 +116,19 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
   const contributingSignals = Array.isArray(incident.signals)
     ? incident.signals
     : [];
+
+
+  const resolutionReady = Boolean(incident.resolution_ready);
+
+  const handleResolveIncident = async () => {
+    if (!incident?.id || !resolutionReady) return;
+    try {
+      await resolveIncident({ incident_id: incident.id });
+      if (onIncidentUpdated) await onIncidentUpdated();
+    } catch (error) {
+      console.error(error);
+    }
+  };
 
   const handleAskAnalyst = async () => {
     if (!incident || !correlation) {
@@ -183,7 +198,7 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
       >
         <div className="panel-header">
           <h2>INCIDENT ASSESSMENT</h2>
-          <span className="incident-status">STATUS: ACTIVE</span>
+          <span className="incident-status">STATUS: {incidentStatus}</span>
         </div>
 
         <div className="incident-hero">
@@ -198,8 +213,8 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
           </div>
 
           <div className="incident-confidence">
-            <span>CONFIDENCE</span>
-            <strong>{confidence}%</strong>
+            <span>CURRENT RISK</span>
+            <strong>{riskPercent}%</strong>
           </div>
         </div>
 
@@ -260,8 +275,8 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
                 <p>{incident.summary}</p>
 
                 <div className="incident-modal-confidence">
-                  <span>CONFIDENCE</span>
-                  <strong>{confidence}%</strong>
+                  <span>DETECTION CONFIDENCE</span>
+                  <strong>{detectionPercent}%</strong>
                 </div>
               </section>
 
@@ -316,6 +331,17 @@ export default function IncidentCard({ incident, correlation, onIncidentUpdated 
                     {incident.narrative ||
                       "Sentinel Forge correlated the available signals into a staged threat assessment. The current classification reflects signal confidence, domain coverage, and escalation pattern."}
                   </p>
+                </div>
+
+                
+                <div className="incident-modal-card">
+                  <h4>RESOLUTION CONTROL</h4>
+                  <button type="button" onClick={handleResolveIncident} disabled={!resolutionReady || incident.status === "resolved"}>
+                    {incident.status === "resolved" ? "RESOLVED" : (resolutionReady ? "MARK RESOLVED" : "RESOLUTION BLOCKED")}
+                  </button>
+                  {!resolutionReady && incident.status !== "resolved" && (
+                    <p>Resolution blocked: active risk remains elevated.</p>
+                  )}
                 </div>
 
                 <div className="incident-modal-card">

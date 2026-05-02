@@ -4,11 +4,21 @@ import uuid
 from datetime import datetime, timezone
 
 
+
+MITIGATION_ACTIONS = {
+    "Lock affected accounts",
+    "Isolate compromised node",
+    "Revoke elevated privileges",
+    "Block suspicious outbound transfer",
+    "Dispatch patrol to Sector B",
+}
+RESOLUTION_RISK_THRESHOLD = 0.30
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 
 
-def interpret(correlation):
+def interpret(correlation, action_status=None, previous_incident=None):
     if not correlation:
         return None
 
@@ -28,18 +38,49 @@ def interpret(correlation):
         has_osint=has_osint,
     )
     actions = build_actions(kinds, confidence, has_physical, has_osint)
+    action_status = action_status or {}
+    completed_required = [action for action in actions if action_status.get(action)]
+
+    incident_id = (
+        previous_incident.get("id")
+        if previous_incident and previous_incident.get("id")
+        else f"INC-{uuid.uuid4().hex[:6].upper()}"
+    )
+
+    detection_confidence = previous_incident.get("detection_confidence", confidence) if previous_incident else confidence
+    active_risk = confidence
+
+    completed_mitigations = [
+        action for action in actions
+        if action in MITIGATION_ACTIONS and action_status.get(action)
+    ]
+
+    resolution_ready = bool(completed_mitigations) and active_risk <= RESOLUTION_RISK_THRESHOLD
+
+    incident_status = "active"
+    if completed_mitigations:
+        incident_status = "containment_in_progress"
+
+    if previous_incident and previous_incident.get("manually_resolved") and resolution_ready:
+        incident_status = "resolved"
 
     return {
-        "id": f"INC-{uuid.uuid4().hex[:6].upper()}",
+        "id": incident_id,
         "type": title,
         "severity": severity,
-        "confidence": confidence,
+        "confidence": active_risk,
+        "detection_confidence": detection_confidence,
+        "active_risk": active_risk,
         "summary": summary,
         "narrative": build_narrative(severity, has_cyber, has_physical, has_osint),
         "signals": kinds,
         "recommended_actions": actions,
         "timestamp": now(),
         "why": why,
+        "status": incident_status,
+        "resolution_ready": resolution_ready,
+        "manually_resolved": bool(previous_incident and previous_incident.get("manually_resolved") and incident_status == "resolved"),
+        "resolved_at": now() if incident_status == "resolved" else None,
     }
 
 

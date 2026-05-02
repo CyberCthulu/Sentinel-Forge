@@ -9,6 +9,8 @@ type Signal = {
   label?: string;
   description?: string;
   active?: boolean;
+  status?: string;
+  mitigated_by?: string | null;
 };
 
 type SignalDefinition = {
@@ -179,11 +181,11 @@ export default function SignalBreakdown({
                 selected ? "selected" : "",
               ].join(" ")}
               onClick={() => {
-                if (active && onSignalSelect) {
+                if ((active || signal.status === "mitigated") && onSignalSelect) {
                   onSignalSelect(signal);
                 }
               }}
-              disabled={!active}
+              disabled={!active && signal.status !== "mitigated"}
               title={
                 active
                   ? `Show ${definition.label} evidence in Event Stream`
@@ -198,7 +200,7 @@ export default function SignalBreakdown({
               </div>
 
               <div className="signal-status">
-                {active ? "ACTIVE" : "INACTIVE"}
+                {String(signal.status || (active ? "ACTIVE" : "INACTIVE")).toUpperCase()}
               </div>
 
               <div className="signal-evidence">
