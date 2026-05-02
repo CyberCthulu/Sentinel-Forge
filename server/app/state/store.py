@@ -52,6 +52,31 @@ def build_initial_state(scenario: Optional[dict[str, Any]] = None) -> dict[str, 
             "step": 0,
             "status": "idle",
         },
+        "operator_actions": {},
+    }
+
+
+def _build_operator_report(incident: dict[str, Any], tracking: dict[str, Any]) -> dict[str, Any]:
+    recommended = incident.get("recommended_actions", []) or []
+    action_status = tracking.get("action_status", {})
+    completed_actions = [action for action in recommended if action_status.get(action)]
+
+    completion_count = len(completed_actions)
+    total_actions = len(recommended)
+    completion_percent = round((completion_count / total_actions) * 100) if total_actions else 0
+
+    summary = (
+        f"Operator completed {completion_count} of {total_actions} recommended actions "
+        f"for incident {incident.get('id', 'unknown')} ({completion_percent}%)."
+    )
+
+    return {
+        "completed_actions": completed_actions,
+        "completion_count": completion_count,
+        "total_actions": total_actions,
+        "completion_percent": completion_percent,
+        "summary": summary,
+        "history": tracking.get("history", []),
     }
 
 
@@ -107,6 +132,15 @@ class StateStore:
 
         self._state["incident"] = result.get("incident")
 
+        if self._state.get("incident"):
+            incident_id = self._state["incident"].get("id")
+            tracking = self._state.get("operator_actions", {}).get(incident_id, {})
+            self._state["incident"]["operator_actions"] = tracking.get("action_status", {})
+            self._state["incident"]["operator_report"] = _build_operator_report(
+                self._state["incident"],
+                tracking,
+            )
+
         if "agent" in result:
             self._state["agent"] = result.get("agent")
 
@@ -119,5 +153,32 @@ class StateStore:
                 "threat_paths": [],
             },
         )
+
+        return self.get()
+
+    def set_incident_action_status(
+        self,
+        incident_id: str,
+        action: str,
+        completed: bool,
+        note: Optional[str] = None,
+    ) -> dict[str, Any]:
+        actions = self._state.setdefault("operator_actions", {})
+        incident_tracking = actions.setdefault(incident_id, {
+            "action_status": {},
+            "history": [],
+        })
+
+        incident_tracking["action_status"][action] = completed
+        incident_tracking["history"].append({
+            "action": action,
+            "completed": completed,
+            "note": note,
+        })
+
+        incident = self._state.get("incident")
+        if incident and incident.get("id") == incident_id:
+            incident["operator_actions"] = incident_tracking["action_status"]
+            incident["operator_report"] = _build_operator_report(incident, incident_tracking)
 
         return self.get()

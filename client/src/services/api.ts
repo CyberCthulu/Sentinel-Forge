@@ -93,3 +93,24 @@ export async function analyzeIncident(payload: {
 
   return res.json();
 }
+
+export async function updateIncidentAction(payload: {
+  incident_id: string;
+  action: string;
+  completed: boolean;
+  note?: string;
+}) {
+  const res = await fetch(`${BASE_URL}/incident/action`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update incident action");
+  }
+
+  return res.json();
+}

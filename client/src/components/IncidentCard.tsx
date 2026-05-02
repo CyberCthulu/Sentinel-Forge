@@ -1,6 +1,6 @@
 // components/IncidentCard.tsx
 import { useEffect, useMemo, useState } from "react";
-import { analyzeIncident } from "../services/api";
+import { analyzeIncident, updateIncidentAction } from "../services/api";
 import "../styles/incident.css";
 
 type AnalystOutput = {
@@ -18,13 +18,15 @@ type AnalystOutput = {
 type Props = {
   incident: any;
   correlation?: any;
+  onIncidentUpdated?: () => Promise<any>;
 };
 
-export default function IncidentCard({ incident, correlation }: Props) {
+export default function IncidentCard({ incident, correlation, onIncidentUpdated }: Props) {
   const [open, setOpen] = useState(false);
   const [analyst, setAnalyst] = useState<AnalystOutput | null>(null);
   const [analystLoading, setAnalystLoading] = useState(false);
   const [analystError, setAnalystError] = useState<string | null>(null);
+  const [completedActions, setCompletedActions] = useState<Record<string, boolean>>({});
 
   const analystContextKey = useMemo(() => {
     if (!incident || !correlation) return "no-active-context";
@@ -73,6 +75,7 @@ export default function IncidentCard({ incident, correlation }: Props) {
     setAnalystLoading(false);
   }, [analystContextKey]);
 
+
   if (!incident) {
     return (
       <div className="panel incident-panel empty">
@@ -96,6 +99,17 @@ export default function IncidentCard({ incident, correlation }: Props) {
   const recommendedActions = Array.isArray(incident.recommended_actions)
     ? incident.recommended_actions
     : [];
+  const incidentActionStatus =
+    incident && typeof incident.operator_actions === "object"
+      ? incident.operator_actions
+      : completedActions;
+  const totalActions = recommendedActions.length;
+  const completedCount = recommendedActions.filter(
+    (action: string) => incidentActionStatus[action],
+  ).length;
+  const progressPercent = totalActions
+    ? Math.round((completedCount / totalActions) * 100)
+    : 0;
 
   const contributingSignals = Array.isArray(incident.signals)
     ? incident.signals
@@ -130,6 +144,35 @@ export default function IncidentCard({ incident, correlation }: Props) {
     : analyst
       ? "REFRESH ANALYST"
       : "ASK ANALYST";
+
+  const handleActionToggle = async (action: string) => {
+    if (!incident?.id) return;
+
+    const next = {
+      ...completedActions,
+      [action]: !incidentActionStatus[action],
+    };
+
+    setCompletedActions(next);
+
+    try {
+      await updateIncidentAction({
+        incident_id: incident.id,
+        action,
+        completed: Boolean(next[action]),
+      });
+
+      if (onIncidentUpdated) {
+        await onIncidentUpdated();
+      }
+    } catch (error) {
+      console.error(error);
+      setCompletedActions((current) => ({
+        ...current,
+        [action]: Boolean(incidentActionStatus[action]),
+      }));
+    }
+  };
 
   return (
     <>
@@ -172,9 +215,13 @@ export default function IncidentCard({ incident, correlation }: Props) {
 
           <section>
             <h4>RECOMMENDED ACTIONS</h4>
+            <div className="incident-actions-progress-inline">
+              <span>{completedCount}/{totalActions} completed</span>
+              <span>{progressPercent}%</span>
+            </div>
             <ul>
               {recommendedActions.map((item: string, index: number) => (
-                <li key={index}>{item}</li>
+                <li key={index} className={incidentActionStatus[item] ? "action-completed" : ""}>{item}</li>
               ))}
             </ul>
           </section>
@@ -230,9 +277,26 @@ export default function IncidentCard({ incident, correlation }: Props) {
 
                 <div className="incident-modal-card">
                   <h4>RECOMMENDED ACTIONS</h4>
-                  <ul>
+                  <div className="incident-actions-progress">
+                    <span>
+                      Action completion: {completedCount}/{totalActions} completed
+                    </span>
+                    <div className="incident-actions-progress-track" role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progressPercent}>
+                      <div className="incident-actions-progress-fill" style={{ width: `${progressPercent}%` }} />
+                    </div>
+                  </div>
+                  <ul className="incident-action-checklist">
                     {recommendedActions.map((item: string, index: number) => (
-                      <li key={index}>{item}</li>
+                      <li key={index} className={incidentActionStatus[item] ? "action-completed" : ""}>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={Boolean(incidentActionStatus[item])}
+                            onChange={() => handleActionToggle(item)}
+                          />
+                          <span>{item}</span>
+                        </label>
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -251,6 +315,14 @@ export default function IncidentCard({ incident, correlation }: Props) {
                   <p>
                     {incident.narrative ||
                       "Sentinel Forge correlated the available signals into a staged threat assessment. The current classification reflects signal confidence, domain coverage, and escalation pattern."}
+                  </p>
+                </div>
+
+                <div className="incident-modal-card">
+                  <h4>INCIDENT ACTION REPORT</h4>
+                  <p>
+                    {incident?.operator_report?.summary ||
+                      "No operator action report available yet for this incident."}
                   </p>
                 </div>
               </section>

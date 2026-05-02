@@ -29,6 +29,7 @@ export default function Dashboard() {
     isAutoRunning,
     isSystemRunning,
     isBusy,
+    refresh,
   } = useSimulation();
 
   const [focusedSignal, setFocusedSignal] = useState<FocusedSignal>(null);
@@ -92,6 +93,7 @@ export default function Dashboard() {
           <IncidentCard
             incident={state.incident}
             correlation={state.correlation}
+            onIncidentUpdated={refresh}
           />
         </section>
 
