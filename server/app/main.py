@@ -37,6 +37,13 @@ class ScenarioSelectRequest(BaseModel):
     scenario_id: str
 
 
+class IncidentActionUpdateRequest(BaseModel):
+    incident_id: str
+    action: str
+    completed: bool
+    note: str | None = None
+
+
 def current_scenario() -> dict:
     return get_scenario_metadata(selected_scenario_id)
 
@@ -144,6 +151,16 @@ def get_state():
 def reset():
     reset_adapter()
     return store.reset(scenario=current_scenario())
+
+
+@app.post("/incident/action")
+def update_incident_action(payload: IncidentActionUpdateRequest):
+    return store.set_incident_action_status(
+        incident_id=payload.incident_id,
+        action=payload.action,
+        completed=payload.completed,
+        note=payload.note,
+    )
 
 
 app.add_middleware(

@@ -202,5 +202,6 @@ export function useSimulation() {
     isAutoRunning,
     isSystemRunning,
     isBusy,
+    refresh,
   };
 }

@@ -792,3 +792,57 @@
     width: 100%;
   }
 }
+.incident-actions-progress-inline {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.incident-actions-progress {
+  margin-bottom: 10px;
+}
+
+.incident-actions-progress > span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.incident-actions-progress-track {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.incident-actions-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.7), rgba(34, 197, 94, 0.75));
+}
+
+.incident-action-checklist {
+  list-style: none;
+  padding-left: 0;
+}
+
+.incident-action-checklist li label {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.incident-action-checklist input[type="checkbox"] {
+  margin-top: 3px;
+}
+
+.action-completed {
+  color: #9ca3af;
+  text-decoration: line-through;
+}
