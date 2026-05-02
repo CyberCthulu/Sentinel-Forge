@@ -4,6 +4,17 @@ import uuid
 from datetime import datetime, timezone
 
 
+MITIGATION_ACTIONS = {
+    "Lock affected accounts",
+    "Isolate compromised node",
+    "Revoke elevated privileges",
+    "Block suspicious outbound transfer",
+    "Dispatch patrol to Sector B",
+}
+
+RESOLUTION_RISK_THRESHOLD = 0.30
+
+
 def now():
     return datetime.now(timezone.utc).isoformat()
 
@@ -12,7 +23,9 @@ def interpret(correlation, action_status=None, previous_incident=None):
     if not correlation:
         return None
 
-    confidence = correlation["confidence"]
+    # After mitigation-aware scoring, correlation["confidence"] represents
+    # current residual/active risk, not historical detection certainty.
+    active_risk = correlation["confidence"]
     signals = correlation["signals"]
     kinds = [s.kind for s in signals]
 
@@ -21,15 +34,16 @@ def interpret(correlation, action_status=None, previous_incident=None):
     has_osint = any(s.domain == "osint" for s in signals)
 
     why = build_why(kinds)
+
     severity, title, summary = classify_threat(
-        confidence=confidence,
+        confidence=active_risk,
         has_cyber=has_cyber,
         has_physical=has_physical,
         has_osint=has_osint,
     )
-    actions = build_actions(kinds, confidence, has_physical, has_osint)
+
+    actions = build_actions(kinds, active_risk, has_physical, has_osint)
     action_status = action_status or {}
-    completed_required = [action for action in actions if action_status.get(action)]
 
     incident_id = (
         previous_incident.get("id")
@@ -37,17 +51,58 @@ def interpret(correlation, action_status=None, previous_incident=None):
         else f"INC-{uuid.uuid4().hex[:6].upper()}"
     )
 
+    previous_detection_confidence = (
+        previous_incident.get("detection_confidence")
+        if previous_incident
+        else None
+    )
+
+    detection_confidence = max(
+        float(previous_detection_confidence or 0),
+        float(active_risk or 0),
+    )
+
+    completed_mitigations = [
+        action
+        for action in actions
+        if action in MITIGATION_ACTIONS and action_status.get(action)
+    ]
+
+    resolution_ready = (
+        bool(completed_mitigations)
+        and active_risk <= RESOLUTION_RISK_THRESHOLD
+    )
+
+    manually_resolved_requested = bool(
+        previous_incident and previous_incident.get("manually_resolved")
+    )
+
     incident_status = "active"
-    if actions and len(completed_required) == len(actions):
+
+    if manually_resolved_requested and resolution_ready:
         incident_status = "resolved"
-    elif completed_required:
+    elif completed_mitigations:
         incident_status = "containment_in_progress"
+
+    previous_resolved_at = (
+        previous_incident.get("resolved_at")
+        if previous_incident
+        else None
+    )
+
+    resolved_at = previous_resolved_at
+    if incident_status == "resolved" and not resolved_at:
+        resolved_at = now()
 
     return {
         "id": incident_id,
         "type": title,
         "severity": severity,
-        "confidence": confidence,
+        # Keep this for backward compatibility with existing UI components.
+        # Semantically, this now reflects active/current residual risk.
+        "confidence": active_risk,
+        "detection_confidence": round(detection_confidence, 2),
+        "active_risk": active_risk,
         "summary": summary,
         "narrative": build_narrative(severity, has_cyber, has_physical, has_osint),
         "signals": kinds,
@@ -55,7 +110,9 @@ def interpret(correlation, action_status=None, previous_incident=None):
         "timestamp": now(),
         "why": why,
         "status": incident_status,
-        "resolved_at": now() if incident_status == "resolved" else None,
+        "resolution_ready": resolution_ready,
+        "manually_resolved": manually_resolved_requested and incident_status == "resolved",
+        "resolved_at": resolved_at if incident_status == "resolved" else None,
     }
 
 
@@ -91,7 +148,7 @@ def classify_threat(confidence, has_cyber, has_physical, has_osint):
         return (
             "low",
             "Anomalous Activity Detected",
-            "Low-confidence anomalies detected across monitored systems",
+            "Low residual risk after current mitigation state",
         )
 
     if confidence < 0.5:
@@ -181,5 +238,5 @@ def build_narrative(severity, has_cyber, has_physical, has_osint):
     return (
         f"Sentinel Forge correlated signals across {domain_text} domains. "
         f"The current assessment is classified as {severity.upper()} based on "
-        "signal confidence, evidence count, and cross-domain escalation pattern."
+        "current residual risk, evidence count, and cross-domain escalation pattern."
     )

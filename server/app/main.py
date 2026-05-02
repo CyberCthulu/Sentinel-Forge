@@ -39,6 +39,10 @@ class ScenarioSelectRequest(BaseModel):
     scenario_id: str
 
 
+class IncidentResolveRequest(BaseModel):
+    incident_id: str
+
+
 class IncidentActionUpdateRequest(BaseModel):
     incident_id: str
     action: str
@@ -158,6 +162,30 @@ def get_state():
 def reset():
     reset_adapter()
     return store.reset(scenario=current_scenario())
+
+
+
+
+@app.post("/incident/resolve")
+def resolve_incident(payload: IncidentResolveRequest):
+    state = store.get()
+    incident = state.get("incident")
+
+    if not incident or incident.get("id") != payload.incident_id:
+        raise HTTPException(status_code=404, detail="Incident not found")
+
+    incident["manually_resolved"] = True
+    state["incident"] = incident
+    store.replace(state)
+
+    result = run_pipeline(
+        state["events"],
+        previous_correlation=state.get("correlation"),
+        operator_actions=state.get("operator_actions", {}).get(payload.incident_id, {}).get("action_status", {}),
+        previous_incident=incident,
+    )
+
+    return store.apply_pipeline_result(result)
 
 
 @app.post("/incident/action")
